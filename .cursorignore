@@ -24,8 +24,56 @@ C:\ProgramData\*
 /root/*
 /home/*
 
-# Protect home directory (only allow this specific project)/Users/admin/*!/Users/admin/Projects/LearnArabic/**
-# Also protect using tilde notation~/*!/Users/admin/Projects/LearnArabic/**
+# ==========================================
+# MAC SYSTEM PROTECTION
+# ==========================================
+
+# Block entire home directory
+/Users/admin
+/Users/admin/*
+
+# Block all common subdirectories explicitly
+/Users/admin/Desktop
+/Users/admin/Desktop/*
+/Users/admin/Documents
+/Users/admin/Documents/*
+/Users/admin/Downloads
+/Users/admin/Downloads/*
+/Users/admin/Pictures
+/Users/admin/Pictures/*
+/Users/admin/Music
+/Users/admin/Music/*
+/Users/admin/Movies
+/Users/admin/Movies/*
+/Users/admin/Library
+/Users/admin/Library/*
+
+# Block using tilde notation too
+~
+~/*
+~/Desktop
+~/Desktop/*
+~/Documents
+~/Documents/*
+~/Downloads
+~/Downloads/*
+~/Pictures
+~/Pictures/*
+~/Music
+~/Music/*
+~/Movies
+~/Movies/*
+~/Library
+~/Library/*
+
+# ==========================================
+# EXPLICITLY ALLOW ONLY THIS PROJECT
+# ==========================================
+
+# Allow the Projects folder and LearnArabic specifically
+!/Users/admin/Projects
+!/Users/admin/Projects/LearnArabic
+!/Users/admin/Projects/LearnArabic/**
 
 # Protect environment files with API keys
 **/.env

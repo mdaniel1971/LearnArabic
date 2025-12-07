@@ -1,0 +1,72 @@
+# ==========================================
+# CURSOR SANDBOX CONFIGURATION
+# Quranic Arabic Learning Platform
+# ==========================================
+
+# CRITICAL: Prevent access to parent directories
+../*
+../../*
+../../../*
+
+# Protect system directories (Windows)
+C:\Windows\*
+C:\Program Files\*
+C:\Program Files (x86)\*
+C:\Users\*\AppData\*
+C:\ProgramData\*
+
+# Protect system directories (Linux/Mac)
+/etc/*
+/var/*
+/usr/*
+/bin/*
+/sbin/*
+/root/*
+/home/*
+
+# Protect home directory (only allow this specific project)/Users/admin/*!/Users/admin/Projects/LearnArabic/**
+# Also protect using tilde notation~/*!/Users/admin/Projects/LearnArabic/**
+
+# Protect environment files with API keys
+**/.env
+**/.env.*
+!**/.env.example
+
+# Protect sensitive configuration
+**/config/secrets.*
+**/config/production.*
+
+# Protect database files
+**/*.db
+**/*.sqlite
+**/*.sql
+
+# Protect SSH and Git credentials
+~/.ssh/*
+~/.git-credentials
+**/.git/config
+
+# Only explicitly allow current project directory
+!./
+!./*
+!./**/*
+
+# ==========================================
+# PROJECT-SPECIFIC PROTECTIONS
+# ==========================================
+
+# Protect Supabase credentials
+**/supabase/.env
+**/supabase/config.toml
+
+# Protect AI API keys (Mistral, etc.)
+**/config/ai-keys.*
+**/lib/api-keys.*
+
+# Protect user data exports
+**/exports/users/*
+**/backups/production/*
+
+# Allow development files
+!**/.env.local.example
+!**/.env.development

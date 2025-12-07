@@ -1,0 +1,62 @@
+{
+  "// ==========================================": "",
+  "// CURSOR SECURITY & WORKSPACE SETTINGS": "",
+  "// Quranic Arabic Learning Platform": "",
+  "// ==========================================": "",
+
+  "// Prevent watching files outside project": "",
+  "files.watcherExclude": {
+    "**/../**": true,
+    "**/node_modules/**": true,
+    "**/.git/**": true,
+    "**/dist/**": true,
+    "**/build/**": true,
+    "**/.next/**": true
+  },
+
+  "// Prevent searching outside project": "",
+  "search.exclude": {
+    "**/../**": true,
+    "**/node_modules": true,
+    "**/dist": true,
+    "**/build": true,
+    "**/.next": true
+  },
+
+  "// File associations for your project": "",
+  "files.associations": {
+    "*.md": "markdown",
+    "*.json": "jsonc"
+  },
+
+  "// Terminal safety": "",
+  "terminal.integrated.allowWorkspaceConfiguration": false,
+  "terminal.integrated.confirmOnExit": "always",
+  
+  "// Prevent auto-execution of code": "",
+  "terminal.integrated.commandsToSkipShell": [],
+  
+  "// Git safety": "",
+  "git.confirmSync": true,
+  "git.confirmEmptyCommits": true,
+  
+  "// Editor settings": "",
+  "editor.formatOnSave": true,
+  "editor.codeActionsOnSave": {
+    "source.fixAll.eslint": "explicit"
+  },
+
+  "// TypeScript/JavaScript settings": "",
+  "typescript.tsdk": "node_modules/typescript/lib",
+  "typescript.enablePromptUseWorkspaceTsdk": true,
+
+  "// Next.js specific": "",
+  "files.exclude": {
+    "**/.next": true,
+    "**/node_modules": true
+  },
+
+  "// Cursor-specific settings (if available)": "",
+  "cursor.ai.autoExecute": false,
+  "cursor.ai.requireConfirmation": true
+}

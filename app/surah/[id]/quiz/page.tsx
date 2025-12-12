@@ -20,7 +20,7 @@ export default function QuizPage() {
   const params = useParams();
   const router = useRouter();
   const surahNumber = parseInt(params.id as string);
-  
+
   const [loading, setLoading] = useState(true);
   const [generating, setGenerating] = useState(false);
   const [questions, setQuestions] = useState<QuizBank[]>([]);
@@ -32,7 +32,7 @@ export default function QuizPage() {
   const [surahName, setSurahName] = useState('');
   const [surahId, setSurahId] = useState<number | null>(null);
   const [grammarTutorialOpen, setGrammarTutorialOpen] = useState(false);
-  const [grammarTutorialData, setGrammarTutorialData] = useState<{ arabicWord: string; grammarInfo: any } | null>(null);
+  const [grammarTutorialData, setGrammarTutorialData] = useState<{ arabicWord: string; grammarInfo: any; wordId?: number } | null>(null);
   const [wordsData, setWordsData] = useState<any[]>([]);
 
   useEffect(() => {
@@ -49,7 +49,7 @@ export default function QuizPage() {
         .select('id, name_english, name_arabic')
         .eq('surah_number', surahNumber)
         .single();
-      
+
       if (!surah) {
         throw new Error('Surah not found');
       }
@@ -62,7 +62,7 @@ export default function QuizPage() {
         .from('verses')
         .select('id, words(id, text_arabic, grammar_info)')
         .eq('surah_id', surah.id);
-      
+
       const allWords = verses?.flatMap(v => v.words || []) || [];
       setWordsData(allWords);
 
@@ -72,12 +72,12 @@ export default function QuizPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ surahId: surah.id })
       });
-      
+
       if (!checkResponse.ok) {
         const errorData = await checkResponse.json().catch(() => ({}));
         throw new Error(errorData.error || `Failed to check quiz bank: ${checkResponse.statusText}`);
       }
-      
+
       const checkData = await checkResponse.json();
       const { needsGeneration } = checkData;
 
@@ -107,7 +107,7 @@ export default function QuizPage() {
         console.error('Supabase error fetching quiz questions:', error);
         throw new Error(`Database error: ${error.message}. Make sure the quiz_bank table exists and RLS policies are set correctly.`);
       }
-      
+
       if (!quizQuestions || quizQuestions.length === 0) {
         throw new Error('No quiz questions found. The quiz may not have been generated successfully.');
       }
@@ -135,10 +135,10 @@ export default function QuizPage() {
   function areAnswersSynonyms(answer1: string, answer2: string): boolean {
     const normalized1 = answer1.trim().toLowerCase();
     const normalized2 = answer2.trim().toLowerCase();
-    
+
     // Exact match
     if (normalized1 === normalized2) return true;
-    
+
     // Check for common synonyms
     const synonymGroups: Record<string, string[]> = {
       'master of': ['owner of', 'possessor of', 'ruler of'],
@@ -148,17 +148,17 @@ export default function QuizPage() {
       'the most merciful': ['the merciful', 'most merciful'],
       'the merciful': ['the most merciful', 'most merciful'],
     };
-    
+
     // Check if answers are in the same synonym group
     for (const [key, synonyms] of Object.entries(synonymGroups)) {
       const answer1Matches = normalized1.includes(key) || synonyms.some(syn => normalized1.includes(syn));
       const answer2Matches = normalized2.includes(key) || synonyms.some(syn => normalized2.includes(syn));
-      
+
       if (answer1Matches && answer2Matches) {
         return true;
       }
     }
-    
+
     return false;
   }
 
@@ -166,17 +166,17 @@ export default function QuizPage() {
   function isAnswerCorrect(userAnswer: string, correctAnswer: string, options: string[]): { isCorrect: boolean; matchedAnswer?: string } {
     const normalizedUser = userAnswer.trim().toLowerCase();
     const normalizedCorrect = correctAnswer.trim().toLowerCase();
-    
+
     // Exact match
     if (normalizedUser === normalizedCorrect) {
       return { isCorrect: true, matchedAnswer: correctAnswer };
     }
-    
+
     // Check if answers are synonyms
     if (areAnswersSynonyms(userAnswer, correctAnswer)) {
       return { isCorrect: true, matchedAnswer: correctAnswer };
     }
-    
+
     return { isCorrect: false };
   }
 
@@ -190,11 +190,11 @@ export default function QuizPage() {
     // Check answer immediately
     const currentQ = questions[currentQuestion];
     const result = isAnswerCorrect(answer, currentQ.correct_answer, (currentQ.options as string[]) || []);
-    
+
     // Extract Arabic word from question text
     const arabicMatch = currentQ.question_text.match(/'([^']+)'/);
     const arabicWord = arabicMatch ? arabicMatch[1] : '';
-    
+
     // Debug: Log grammar data
     console.log('Question data for feedback:', {
       questionId,
@@ -207,7 +207,7 @@ export default function QuizPage() {
       correctAnswer: currentQ.correct_answer,
       isCorrect: result.isCorrect
     });
-    
+
     setFeedback(prev => ({
       ...prev,
       [questionId]: {
@@ -238,22 +238,23 @@ export default function QuizPage() {
       console.log('Missing word_id for grammar tutorial');
       return;
     }
-    
+
     // If arabicWord is not provided, try to extract from results or fetch
     let finalArabicWord = arabicWord;
-    
+
     // Try to find word in wordsData first
     const word = wordsData.find(w => w.id === wordId);
-    
+
     if (word && word.grammar_info) {
       setGrammarTutorialData({
         arabicWord: finalArabicWord || word.text_arabic,
-        grammarInfo: word.grammar_info
+        grammarInfo: word.grammar_info,
+        wordId: wordId
       });
       setGrammarTutorialOpen(true);
       return;
     }
-    
+
     // Fetch the word from database if not in wordsData
     const supabase = createClient();
     const { data: wordData, error } = await supabase
@@ -261,11 +262,12 @@ export default function QuizPage() {
       .select('text_arabic, grammar_info')
       .eq('id', wordId)
       .single();
-    
+
     if (!error && wordData && wordData.grammar_info) {
       setGrammarTutorialData({
         arabicWord: finalArabicWord || wordData.text_arabic,
-        grammarInfo: wordData.grammar_info
+        grammarInfo: wordData.grammar_info,
+        wordId: wordId
       });
       setGrammarTutorialOpen(true);
     } else {
@@ -275,7 +277,7 @@ export default function QuizPage() {
 
   async function submitQuiz() {
     if (!surahId) return;
-    
+
     try {
       const answersArray = questions.map(q => ({
         questionId: q.id,
@@ -297,7 +299,7 @@ export default function QuizPage() {
       }
 
       const data = await response.json();
-      
+
       if (data.success) {
         setResults(data);
         setShowResults(true);
@@ -328,14 +330,14 @@ export default function QuizPage() {
           <div className="mb-4">
             <button
               onClick={() => router.push('/dashboard')}
-              className="text-indigo-600 hover:text-indigo-800"
+              className="text-primary-600 hover:text-primary-700 font-medium"
             >
               ← Back to Dashboard
             </button>
           </div>
           <div className="flex items-center justify-center min-h-[60vh]">
             <div className="text-center">
-              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600 mx-auto mb-4"></div>
               <p className="text-gray-600">
                 {generating ? 'Generating your quiz...' : 'Loading quiz...'}
               </p>
@@ -353,7 +355,7 @@ export default function QuizPage() {
           <div className="mb-4">
             <button
               onClick={() => router.push('/dashboard')}
-              className="text-indigo-600 hover:text-indigo-800"
+              className="text-primary-600 hover:text-primary-700 font-medium"
             >
               ← Back to Dashboard
             </button>
@@ -361,28 +363,27 @@ export default function QuizPage() {
           <div className="bg-white rounded-lg shadow-md p-6 mb-6">
             <h1 className="text-2xl font-bold mb-4">Quiz Results: {surahName}</h1>
             <div className="text-center mb-6">
-              <div className="text-5xl font-bold text-blue-600 mb-2">
+              <div className="text-5xl font-bold text-primary-600 mb-2">
                 {results.score}/{results.totalQuestions}
               </div>
               <p className="text-gray-600">
                 {Math.round((results.score / results.totalQuestions) * 100)}% Correct
               </p>
             </div>
-            
+
             <div className="space-y-4">
               {results.results.map((result: any, index: number) => {
                 // Extract Arabic word from question text
                 const arabicMatch = result.question_text.match(/'([^']+)'/);
                 const arabicWord = arabicMatch ? arabicMatch[1] : '';
-                
+
                 return (
-                  <div 
+                  <div
                     key={index}
-                    className={`p-4 rounded-lg border-2 relative ${
-                      result.is_correct 
-                        ? 'bg-green-50 border-green-200' 
-                        : 'bg-red-50 border-red-200'
-                    }`}
+                    className={`p-4 rounded-lg border-2 relative ${result.is_correct
+                      ? 'bg-green-50 border-green-200'
+                      : 'bg-red-50 border-red-200'
+                      }`}
                   >
                     {(result.word_id || result.grammar_point) && (
                       <button
@@ -413,7 +414,7 @@ export default function QuizPage() {
                         })}</span>
                       </div>
                     </div>
-                    
+
                     <div className="ml-6 space-y-1 text-sm">
                       <p>
                         <span className="font-semibold">Your answer:</span>{' '}
@@ -441,7 +442,7 @@ export default function QuizPage() {
             <div className="flex gap-4 mt-6">
               <button
                 onClick={retakeQuiz}
-                className="flex-1 bg-blue-600 text-white py-3 rounded-lg hover:bg-blue-700 transition-colors"
+                className="flex-1 bg-primary-600 text-white py-3 rounded-lg hover:bg-primary-700 transition-colors font-semibold"
               >
                 Retake Quiz
               </button>
@@ -470,7 +471,7 @@ export default function QuizPage() {
           <div className="mb-4">
             <button
               onClick={() => router.push('/dashboard')}
-              className="text-indigo-600 hover:text-indigo-800"
+              className="text-primary-600 hover:text-primary-700 font-medium"
             >
               ← Back to Dashboard
             </button>
@@ -511,8 +512,8 @@ export default function QuizPage() {
               </span>
             </div>
             <div className="w-full bg-gray-200 rounded-full h-2 mt-2">
-              <div 
-                className="bg-blue-600 h-2 rounded-full transition-all"
+              <div
+                className="bg-primary-600 h-2 rounded-full transition-all"
                 style={{ width: `${((currentQuestion + 1) / questions.length) * 100}%` }}
               ></div>
             </div>
@@ -532,40 +533,39 @@ export default function QuizPage() {
                 return <span key={i}>{part}</span>;
               })}
             </h2>
-            
+
             {currentQ.question_type === 'multiple_choice' && currentQ.options && (
               <div className="space-y-3">
                 {(currentQ.options as string[]).map((option, index) => {
                   // Check if this option is correct (exact match or synonym)
-                  const isThisOptionCorrect = hasAnswered && currentFeedback 
+                  const isThisOptionCorrect = hasAnswered && currentFeedback
                     ? areAnswersSynonyms(option, currentFeedback.correctAnswer)
                     : false;
                   const isUserSelected = currentAnswer === option;
                   const userAnswerIsCorrect = hasAnswered && currentFeedback ? currentFeedback.isCorrect : false;
-                  
+
                   return (
                     <button
                       key={index}
                       onClick={() => handleAnswer(option)}
                       disabled={hasAnswered}
-                      className={`w-full text-left p-4 rounded-lg border-2 transition-colors ${
-                        hasAnswered && currentFeedback
-                          ? isThisOptionCorrect
-                            ? 'border-green-600 bg-green-50'
-                            : isUserSelected && !userAnswerIsCorrect
+                      className={`w-full text-left p-4 rounded-lg border-2 transition-colors ${hasAnswered && currentFeedback
+                        ? isThisOptionCorrect
+                          ? 'border-green-600 bg-green-50'
+                          : isUserSelected && !userAnswerIsCorrect
                             ? 'border-red-600 bg-red-50'
                             : 'border-gray-200 opacity-50'
-                          : isUserSelected
-                          ? 'border-blue-600 bg-blue-50'
+                        : isUserSelected
+                          ? 'border-primary-600 bg-primary-50'
                           : 'border-gray-200 hover:border-blue-300'
-                      } ${hasAnswered ? 'cursor-not-allowed' : 'cursor-pointer'}`}
+                        } ${hasAnswered ? 'cursor-not-allowed' : 'cursor-pointer'}`}
                     >
                       {option}
                       {hasAnswered && currentFeedback && isThisOptionCorrect && (
-                        <span className="ml-2 text-green-600 font-semibold">✓ Correct</span>
+                        <span className="ml-2 text-green-600 font-semibold">✓</span>
                       )}
                       {hasAnswered && currentFeedback && isUserSelected && !userAnswerIsCorrect && (
-                        <span className="ml-2 text-red-600 font-semibold">✗ Incorrect</span>
+                        <span className="ml-2 text-red-600 font-semibold">✗</span>
                       )}
                     </button>
                   );
@@ -579,24 +579,22 @@ export default function QuizPage() {
                 value={currentAnswer || ''}
                 onChange={(e) => handleAnswer(e.target.value)}
                 disabled={hasAnswered}
-                className={`w-full p-4 border-2 rounded-lg focus:outline-none ${
-                  hasAnswered && currentFeedback
-                    ? currentFeedback.isCorrect
-                      ? 'border-green-600 bg-green-50'
-                      : 'border-red-600 bg-red-50'
-                    : 'border-gray-200 focus:border-blue-600'
-                }`}
+                className={`w-full p-4 border-2 rounded-lg focus:outline-none ${hasAnswered && currentFeedback
+                  ? currentFeedback.isCorrect
+                    ? 'border-green-600 bg-green-50'
+                    : 'border-red-600 bg-red-50'
+                  : 'border-gray-200 focus:border-blue-600'
+                  }`}
                 placeholder="Type your answer..."
               />
             )}
 
             {/* Immediate Feedback */}
             {hasAnswered && currentFeedback && (
-              <div className={`mt-4 p-4 rounded-lg border-2 relative ${
-                currentFeedback.isCorrect 
-                  ? 'bg-green-50 border-green-200' 
-                  : 'bg-red-50 border-red-200'
-              }`}>
+              <div className={`mt-4 p-4 rounded-lg border-2 relative ${currentFeedback.isCorrect
+                ? 'bg-green-50 border-green-200'
+                : 'bg-red-50 border-red-200'
+                }`}>
                 {currentFeedback.wordId && currentFeedback.arabicWord && (
                   <button
                     onClick={() => openGrammarTutorial(currentFeedback.wordId, currentFeedback.arabicWord)}
@@ -608,19 +606,19 @@ export default function QuizPage() {
                 )}
                 <div className="flex items-start gap-2 mb-2 pr-8">
                   {currentFeedback.isCorrect ? (
-                    <span className="text-green-600 font-bold">✓ Correct!</span>
+                    <span className="text-green-600 font-bold">Correct!</span>
                   ) : (
-                    <span className="text-red-600 font-bold">✗ Incorrect</span>
+                    <span className="text-red-600 font-bold">Incorrect</span>
                   )}
                 </div>
-                
+
                 {!currentFeedback.isCorrect && (
                   <p className="mb-2">
                     <span className="font-semibold">Correct answer:</span>{' '}
                     <span className="text-green-700">{currentFeedback.correctAnswer}</span>
                   </p>
                 )}
-                
+
                 {currentFeedback.explanation && (
                   <p className="text-gray-700 mb-2">
                     <span className="font-semibold">Explanation:</span> {currentFeedback.explanation}
@@ -638,7 +636,7 @@ export default function QuizPage() {
             >
               Previous
             </button>
-            
+
             {currentQuestion < questions.length - 1 ? (
               <button
                 onClick={nextQuestion}
@@ -657,12 +655,12 @@ export default function QuizPage() {
             )}
           </div>
 
-          {currentQuestion === questions.length - 1 && 
-           Object.keys(answers).length < questions.length && (
-            <p className="text-sm text-orange-600 mt-4 text-center">
-              Please answer all questions before submitting
-            </p>
-          )}
+          {currentQuestion === questions.length - 1 &&
+            Object.keys(answers).length < questions.length && (
+              <p className="text-sm text-orange-600 mt-4 text-center">
+                Please answer all questions before submitting
+              </p>
+            )}
         </div>
       </div>
 
@@ -676,6 +674,7 @@ export default function QuizPage() {
           }}
           arabicWord={grammarTutorialData.arabicWord}
           grammarInfo={grammarTutorialData.grammarInfo}
+          wordId={grammarTutorialData.wordId}
         />
       )}
     </div>

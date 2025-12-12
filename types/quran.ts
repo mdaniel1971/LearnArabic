@@ -30,6 +30,8 @@ export interface GrammarInfo {
   person?: 'first' | 'second' | 'third';
   tense?: 'past' | 'present' | 'imperative' | 'future';
   mood?: 'indicative' | 'subjunctive' | 'jussive' | 'imperative';
+  voice?: 'active' | 'passive';
+  aspect?: 'perfect' | 'imperfect' | 'imperative';
   form?: string;
   type?: string;
   preposition?: string;

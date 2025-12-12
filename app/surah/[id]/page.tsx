@@ -72,33 +72,36 @@ export default async function SurahPage({ params }: SurahPageProps) {
   });
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
+    <div className="min-h-screen bg-white py-8">
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="mb-6">
           <Link
             href="/dashboard"
-            className="text-indigo-600 hover:text-indigo-800"
+            className="text-primary-600 hover:text-primary-700 font-medium inline-flex items-center gap-2"
           >
-            ← Back to Dashboard
+            <span>←</span> Back to Dashboard
           </Link>
         </div>
         {/* Surah Header */}
-        <div className="bg-white rounded-lg shadow-md p-6 mb-6">
+        <div className="bg-white border border-gray-200 rounded-xl shadow-sm p-8 mb-8">
           <div className="text-center">
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">
+            <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-primary-100 text-primary-700 font-bold text-lg mb-4">
+              {surah.surah_number}
+            </div>
+            <h1 className="text-3xl font-bold text-gray-900 mb-3">
               {surah.name_english}
             </h1>
-            <div dir="rtl" className="text-right">
-              <ArabicText variant="verse" className="text-3xl">
+            <div dir="rtl" className="text-right mb-4">
+              <ArabicText variant="verse" className="text-3xl text-primary-700">
                 {surah.name_arabic}
               </ArabicText>
             </div>
-            <p className="text-gray-600 mt-4">
-              {surah.total_verses} verses
+            <p className="text-gray-600 mb-6">
+              {surah.total_verses} Ayahs
             </p>
             <Link 
               href={`/surah/${surah.surah_number}/quiz`}
-              className="inline-block mt-6 w-full max-w-md bg-purple-600 text-white py-4 rounded-lg text-center font-semibold hover:bg-purple-700 transition-colors"
+              className="inline-block w-full max-w-md bg-primary-600 text-white py-3 px-6 rounded-lg text-center font-semibold hover:bg-primary-700 transition-colors shadow-sm"
             >
               📝 Take Quiz
             </Link>

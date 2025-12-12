@@ -25,7 +25,13 @@ supabase db push
 
 ## Migration Files
 
-- `20240101000000_create_quran_schema.sql` - Creates the Quran content schema with surahs, verses, and words tables
+### Active Migrations (Not Yet Applied)
+
+- `20241207000007_update_compound_words_from_morphology.sql` - Updates grammar_info for surahs 97-114 to properly identify and store compound words (noun+pronoun and verb+pronoun combinations) with detailed pronoun and verb information from the Quranic Arabic Corpus morphology data
+
+### Historical Migrations
+
+Historical migrations that have already been applied are stored in the `old/` folder. See `old/README.md` for details.
 
 ## Schema Overview
 

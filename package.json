@@ -9,7 +9,10 @@
     "lint": "next lint",
     "populate-juz-amma": "tsx scripts/populate-juz-amma.ts",
     "add-word-translations": "tsx scripts/add-word-translations.ts",
-    "generate-juz-amma-sql": "tsx scripts/generate-juz-amma-sql.ts"
+    "generate-juz-amma-sql": "tsx scripts/generate-juz-amma-sql.ts",
+    "fetch-corpus-grammar": "tsx scripts/fetch-corpus-grammar.ts",
+    "add-particle-types": "tsx scripts/add-particle-types.ts",
+    "fetch-voice-from-corpus": "tsx scripts/fetch-voice-from-corpus.ts"
   },
   "dependencies": {
     "@mistralai/mistralai": "^1.10.0",

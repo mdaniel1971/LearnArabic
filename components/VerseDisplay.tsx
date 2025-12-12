@@ -11,26 +11,26 @@ interface VerseDisplayProps {
 
 export default function VerseDisplay({ verse, words }: VerseDisplayProps) {
   return (
-    <div className="bg-green-50 rounded-lg shadow-sm p-3">
-      <div className="mb-2">
-        <span className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-indigo-100 text-indigo-800 font-semibold text-sm">
+    <div className="bg-white border border-gray-200 rounded-xl p-6 hover:border-primary-300 transition-colors">
+      <div className="mb-4 flex items-center gap-3">
+        <span className="inline-flex items-center justify-center w-10 h-10 rounded-full bg-primary-100 text-primary-700 font-semibold text-sm">
           {verse.verse_number}
         </span>
       </div>
       
-      <div dir="rtl" className="text-right mb-2">
+      <div dir="rtl" className="text-right">
         {words.length > 0 ? (
           <div dir="rtl" className="flex flex-wrap gap-2">
             {words.map((word) => (
               <WordModal key={word.id} word={word}>
-                <button className="hover:bg-indigo-50 px-2 py-1 rounded transition-colors">
-                  <ArabicText variant="word">{word.text_arabic}</ArabicText>
+                <button className="hover:bg-primary-50 px-3 py-2 rounded-lg transition-colors">
+                  <ArabicText variant="word" className="text-primary-900">{word.text_arabic}</ArabicText>
                 </button>
               </WordModal>
             ))}
           </div>
         ) : (
-          <ArabicText variant="verse">{verse.text_arabic}</ArabicText>
+          <ArabicText variant="verse" className="text-primary-900">{verse.text_arabic}</ArabicText>
         )}
       </div>
     </div>

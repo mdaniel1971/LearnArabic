@@ -38,7 +38,7 @@ export default function QuizHistoryPage() {
   const [attempts, setAttempts] = useState<AttemptWithQuestions[]>([]);
   const [expandedAttempts, setExpandedAttempts] = useState<Set<string>>(new Set());
   const [grammarTutorialOpen, setGrammarTutorialOpen] = useState(false);
-  const [grammarTutorialData, setGrammarTutorialData] = useState<{ arabicWord: string; grammarInfo: any } | null>(null);
+  const [grammarTutorialData, setGrammarTutorialData] = useState<{ arabicWord: string; grammarInfo: any; wordId?: number } | null>(null);
   const [wordsData, setWordsData] = useState<Map<number, any>>(new Map());
 
   useEffect(() => {
@@ -212,7 +212,8 @@ export default function QuizHistoryPage() {
 
         setGrammarTutorialData({
           arabicWord,
-          grammarInfo: wordData.grammar_info
+          grammarInfo: wordData.grammar_info,
+          wordId: wordId
         });
         setGrammarTutorialOpen(true);
       } else {
@@ -227,7 +228,8 @@ export default function QuizHistoryPage() {
 
     setGrammarTutorialData({
       arabicWord,
-      grammarInfo: word.grammar_info
+      grammarInfo: word.grammar_info,
+      wordId: wordId
     });
     setGrammarTutorialOpen(true);
   }
@@ -249,7 +251,7 @@ export default function QuizHistoryPage() {
         <div className="mb-6">
           <button
             onClick={() => router.push('/dashboard')}
-            className="text-indigo-600 hover:text-indigo-800 mb-4"
+            className="text-primary-600 hover:text-primary-700 mb-4 font-medium"
           >
             ← Back to Dashboard
           </button>
@@ -262,7 +264,7 @@ export default function QuizHistoryPage() {
             <p className="text-gray-600">No quiz attempts yet. Take a quiz to see your history here!</p>
             <Link
               href="/surah/1"
-              className="mt-4 inline-block text-indigo-600 hover:text-indigo-800"
+              className="mt-4 inline-block text-primary-600 hover:text-primary-700 font-medium"
             >
               Take Al-Fatiha Quiz →
             </Link>
@@ -413,7 +415,7 @@ export default function QuizHistoryPage() {
                         )}
                       </div>
                       <div className="text-right">
-                        <div className="text-2xl font-bold text-indigo-600">
+                        <div className="text-2xl font-bold text-primary-600">
                           {attempt.score}/{attempt.total_questions}
                         </div>
                         <div className="text-sm text-gray-600">{percentage}%</div>
@@ -521,6 +523,7 @@ export default function QuizHistoryPage() {
           }}
           arabicWord={grammarTutorialData.arabicWord}
           grammarInfo={grammarTutorialData.grammarInfo}
+          wordId={grammarTutorialData.wordId}
         />
       )}
     </div>

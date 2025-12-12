@@ -57,25 +57,3 @@ backups/production/
 
 # Sensitive scripts
 scripts/production-deploy.*
-
-# ==========================================
-# ADDITIONAL SECURITY - Added Dec 2025
-# ==========================================
-
-# Supabase local files
-.supabase/
-
-# API Keys and Secrets (extra protection)
-config/secrets.*
-lib/api-keys.*
-**/mistral-key.*
-**/openai-key.*
-
-# User Data exports
-exports/users/
-backups/production/
-*.db
-*.sqlite
-
-# Sensitive scripts
-scripts/production-deploy.*

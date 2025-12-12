@@ -130,11 +130,18 @@ Return as a JSON array with this EXACT structure:
     "correct_answer": "Genitive (جر)",
     "word_id": 456,
     "grammar_point": "grammatical_case",
-    "explanation": "The word ends with kasrah (ِ) indicating genitive case, as it follows the preposition 'bi' (بِ)."
+    "explanation": "The word ends with a kasrah (pronounced '-i') indicating genitive case, as it follows the preposition 'bi' (بِ)."
   }
 ]
 
-Make questions educational and varied. Include clear explanations.`;
+Make questions educational and varied. Include clear explanations.
+
+IMPORTANT FOR EXPLANATIONS:
+- When referring to Arabic diacritics (vowel marks) in explanations, use transliterated forms like "-i" (for kasra/kasrah), "-a" (for fatha), "-u" (for damma) instead of isolated Arabic diacritic characters.
+- Do NOT use isolated diacritics like "(ِ)" or "(َ)" or "(ُ)" in explanations as they may not display correctly.
+- Instead, write: "ends with a kasrah (pronounced '-i')" or "has a fatha (pronounced '-a')" or "ends with '-i' (kasrah)".
+- Always use readable transliterations in parentheses when explaining diacritics.
+- **TERMINOLOGY**: Always use "tense" terminology instead of "aspect" when discussing Arabic verbs in explanations. Use "perfect tense" or "past tense" instead of "perfect aspect", and "imperfect tense" or "present/future tense" instead of "imperfect aspect". This terminology is more accessible for English-speaking learners who aren't linguistics students.`;
 
     // Call Mistral AI
     const mistralResponse = await fetch('https://api.mistral.ai/v1/chat/completions', {
@@ -246,6 +253,48 @@ Make questions educational and varied. Include clear explanations.`;
           .replace(/\(Madi\)/gi, '(ماضي)')
           .replace(/\(Mudari'\)/gi, '(مضارع)')
           .replace(/\(Amr\)/gi, '(أمر)');
+      }
+      
+      // Fix isolated Arabic diacritics in explanations
+      if (q.explanation) {
+        const diacriticMap: Record<string, string> = {
+          '\u064E': 'a',  // fatha
+          '\u064F': 'u',  // damma
+          '\u0650': 'i',  // kasra/kasrah
+          '\u0651': '',   // shadda (remove)
+          '\u0652': '',   // sukun (remove)
+          '\u064B': 'an', // fathatan
+          '\u064C': 'un', // dammatan
+          '\u064D': 'in', // kasratan
+        };
+        
+        // Replace isolated diacritics in parentheses like (ِ) or (َ) or (ُ)
+        q.explanation = q.explanation.replace(/\((\u064E|\u064F|\u0650|\u0651|\u0652|\u064B|\u064C|\u064D)\)/g, (match, diacritic) => {
+          const transliteration = diacriticMap[diacritic];
+          if (transliteration) {
+            return `(pronounced '-${transliteration}')`;
+          }
+          return '';
+        });
+        
+        // Replace patterns like "kasrah (ِ)" or "a kasrah (ِ)" or "the kasrah (ِ)" with "kasrah (pronounced '-i')"
+        q.explanation = q.explanation.replace(/(a\s+|the\s+)?(kasra[h]?|fatha|damma)\s*\((\u064E|\u064F|\u0650|\u0651|\u0652|\u064B|\u064C|\u064D)\)/gi, (match, article, term, diacritic) => {
+          const transliteration = diacriticMap[diacritic];
+          if (transliteration) {
+            const articleText = article ? article.trim() + ' ' : '';
+            return `${articleText}${term} (pronounced '-${transliteration}')`;
+          }
+          return match;
+        });
+        
+        // Replace patterns like "ends with (ِ)" with "ends with '-i'"
+        q.explanation = q.explanation.replace(/(ends?\s+with|has|contains)\s*\((\u064E|\u064F|\u0650|\u0651|\u0652|\u064B|\u064C|\u064D)\)/gi, (match, verb, diacritic) => {
+          const transliteration = diacriticMap[diacritic];
+          if (transliteration) {
+            return `${verb} '-${transliteration}'`;
+          }
+          return verb;
+        });
       }
       
       return q;

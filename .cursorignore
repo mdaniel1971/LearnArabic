@@ -87,7 +87,7 @@ C:\ProgramData\*
 # Protect database files
 **/*.db
 **/*.sqlite
-**/*.sql
+#**/*.sql
 
 # Protect SSH and Git credentials
 ~/.ssh/*

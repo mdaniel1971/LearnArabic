@@ -51,7 +51,7 @@ const SURAH_METADATA: Record<number, { name_arabic: string; name_english: string
   97: { name_arabic: 'الْقَدْرِ', name_english: 'The Night of Decree', total_verses: 5 },
   98: { name_arabic: 'الْبَيِّنَةُ', name_english: 'The Clear Evidence', total_verses: 8 },
   99: { name_arabic: 'الزَّلْزَلَةُ', name_english: 'The Earthquake', total_verses: 8 },
-  100: { name_arabic: 'الْعَادِيَاتِ', name_english: 'The Courser', total_verses: 11 },
+  100: { name_arabic: 'الْعَادِيَاتِ', name_english: 'The Chargers', total_verses: 11 },
   101: { name_arabic: 'الْقَارِعَةُ', name_english: 'The Calamity', total_verses: 11 },
   102: { name_arabic: 'التَّكَاثُرُ', name_english: 'Competition', total_verses: 8 },
   103: { name_arabic: 'الْعَصْرِ', name_english: 'The Declining Day', total_verses: 3 },

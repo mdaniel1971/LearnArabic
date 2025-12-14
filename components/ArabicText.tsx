@@ -1,9 +1,10 @@
-import { ReactNode } from 'react';
+import { ReactNode, CSSProperties } from 'react';
 
 interface ArabicTextProps {
   children: ReactNode;
   className?: string;
   variant?: 'default' | 'verse' | 'word';
+  style?: CSSProperties;
 }
 
 /**
@@ -13,7 +14,8 @@ interface ArabicTextProps {
 export default function ArabicText({ 
   children, 
   className = '', 
-  variant = 'default' 
+  variant = 'default',
+  style
 }: ArabicTextProps) {
   const baseClasses = 'arabic';
   const variantClasses = {
@@ -27,6 +29,8 @@ export default function ArabicText({
       className={`${baseClasses} ${variantClasses[variant]} ${className}`}
       lang="ar"
       dir="rtl"
+      translate="no"
+      style={style}
     >
       {children}
     </span>

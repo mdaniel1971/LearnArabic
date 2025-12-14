@@ -88,20 +88,22 @@ export default async function SurahPage({ params }: SurahPageProps) {
             <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-primary-100 text-primary-700 font-bold text-lg mb-4">
               {surah.surah_number}
             </div>
-            <h1 className="text-3xl font-bold text-gray-900 mb-3">
-              {surah.name_english}
-            </h1>
-            <div dir="rtl" className="text-right mb-4">
-              <ArabicText variant="verse" className="text-3xl text-primary-700">
-                {surah.name_arabic}
-              </ArabicText>
+            <div className="flex items-center justify-center gap-4 mb-3">
+              <h1 className="text-3xl font-bold text-gray-900">
+                {surah.name_english}
+              </h1>
+              <div dir="rtl" className="text-center">
+                <ArabicText variant="verse" className="text-primary-700" style={{ fontSize: '50px' }}>
+                  {surah.name_arabic}
+                </ArabicText>
+              </div>
             </div>
             <p className="text-gray-600 mb-6">
               {surah.total_verses} Ayahs
             </p>
             <Link 
               href={`/surah/${surah.surah_number}/quiz`}
-              className="inline-block w-full max-w-md bg-primary-600 text-white py-3 px-6 rounded-lg text-center font-semibold hover:bg-primary-700 transition-colors shadow-sm"
+              className="inline-block w-full max-w-md bg-primary-600 text-white py-3 px-6 rounded-lg text-center font-semibold hover:bg-primary-700 transition-colors"
             >
               📝 Take Quiz
             </Link>

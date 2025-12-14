@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import ArabicText from "./ArabicText";
 import WordModal from "./WordModal";
 import { Verse, Word } from "@/types/quran";
@@ -7,6 +8,31 @@ import { Verse, Word } from "@/types/quran";
 interface VerseDisplayProps {
   verse: Verse;
   words: Word[];
+}
+
+function WordButton({ word }: { word: Word }) {
+  const [isHovered, setIsHovered] = useState(false);
+
+  return (
+    <WordModal word={word}>
+      <button
+        className="cursor-pointer px-3 py-2 rounded-lg transition-colors duration-150"
+        style={{ 
+          backgroundColor: isHovered ? '#dcfce7' : 'transparent'
+        }}
+        onMouseEnter={() => setIsHovered(true)}
+        onMouseLeave={() => setIsHovered(false)}
+      >
+        <ArabicText
+          variant="word"
+          className="transition-colors duration-150"
+          style={{ color: isHovered ? '#22c55e' : '#1e293b' }}
+        >
+          {word.text_arabic}
+        </ArabicText>
+      </button>
+    </WordModal>
+  );
 }
 
 export default function VerseDisplay({ verse, words }: VerseDisplayProps) {
@@ -22,11 +48,7 @@ export default function VerseDisplay({ verse, words }: VerseDisplayProps) {
         {words.length > 0 ? (
           <div dir="rtl" className="flex flex-wrap gap-2">
             {words.map((word) => (
-              <WordModal key={word.id} word={word}>
-                <button className="hover:bg-primary-50 px-3 py-2 rounded-lg transition-colors">
-                  <ArabicText variant="word" className="text-primary-900">{word.text_arabic}</ArabicText>
-                </button>
-              </WordModal>
+              <WordButton key={word.id} word={word} />
             ))}
           </div>
         ) : (

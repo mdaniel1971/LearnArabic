@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import Link from "next/link";
 import ArabicText from "@/components/ArabicText";
 import VerseDisplay from "@/components/VerseDisplay";
+import BismillahDisplay from "@/components/BismillahDisplay";
 import { Surah, Verse, Word } from "@/types/quran";
 
 interface SurahPageProps {
@@ -54,6 +55,41 @@ export default async function SurahPage({ params }: SurahPageProps) {
 
   if (wordsError) {
     return <div>Error loading words</div>;
+  }
+
+  // Fetch Bismillah words from Al-Fatiha verse 1 if needed
+  // Bismillah should appear for all surahs except Al-Fatiha (1) and At-Tawbah (9)
+  let bismillahWords: Word[] = [];
+  const shouldShowBismillah = surah.surah_number !== 1 && surah.surah_number !== 9;
+
+  if (shouldShowBismillah) {
+    // Fetch Al-Fatiha verse 1 words
+    const { data: alFatihaSurah } = await supabase
+      .from("surahs")
+      .select("id")
+      .eq("surah_number", 1)
+      .single();
+
+    if (alFatihaSurah) {
+      const { data: alFatihaVerse1 } = await supabase
+        .from("verses")
+        .select("id")
+        .eq("surah_id", alFatihaSurah.id)
+        .eq("verse_number", 1)
+        .single();
+
+      if (alFatihaVerse1) {
+        const { data: bismillahWordsData } = await supabase
+          .from("words")
+          .select("id, verse_id, word_position, text_arabic, transliteration, translation_english, grammar_info, created_at, updated_at")
+          .eq("verse_id", alFatihaVerse1.id)
+          .order("word_position", { ascending: true });
+
+        if (bismillahWordsData) {
+          bismillahWords = bismillahWordsData;
+        }
+      }
+    }
   }
 
   // Debug: Log first word to verify grammar_info is included
@@ -112,6 +148,11 @@ export default async function SurahPage({ params }: SurahPageProps) {
             </p>
           </div>
         </div>
+
+        {/* Bismillah - Display for all surahs except Al-Fatiha (1) and At-Tawbah (9) */}
+        {shouldShowBismillah && bismillahWords.length > 0 && (
+          <BismillahDisplay words={bismillahWords} />
+        )}
 
         {/* Verses */}
         <div className="space-y-6">

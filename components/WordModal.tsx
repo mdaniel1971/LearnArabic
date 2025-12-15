@@ -4,6 +4,7 @@ import { useState } from "react";
 import ArabicText from "./ArabicText";
 import GrammarTutorialModal from "./GrammarTutorialModal";
 import { Word, GrammarInfo } from "@/types/quran";
+import { cleanTranslation } from "@/utils/translation";
 
 interface WordModalProps {
   word: Word;
@@ -28,10 +29,10 @@ export default function WordModal({ word, children }: WordModalProps) {
     }
 
     const partOfSpeech = grammarInfo.part_of_speech || '';
-    const isCompound = partOfSpeech.includes('_pronoun') || 
-                      (Array.isArray(grammarInfo.features) && 
-                       grammarInfo.features.includes('pronoun') && 
-                       (grammarInfo.features.includes('noun') || grammarInfo.features.includes('verb')));
+    const isCompound = partOfSpeech.includes('_pronoun') ||
+      (Array.isArray(grammarInfo.features) &&
+        grammarInfo.features.includes('pronoun') &&
+        (grammarInfo.features.includes('noun') || grammarInfo.features.includes('verb')));
 
     if (!isCompound) {
       return <span>{arabicText}</span>;
@@ -53,7 +54,7 @@ export default function WordModal({ word, children }: WordModalProps) {
     // Try to find and split the suffix
     let stem = arabicText;
     let suffix = '';
-    
+
     for (const suffixPattern of pronounSuffixes) {
       if (arabicText.endsWith(suffixPattern)) {
         suffix = suffixPattern;
@@ -82,13 +83,13 @@ export default function WordModal({ word, children }: WordModalProps) {
     // Check for compound words (multiple parts of speech)
     // Method 1: Check if part_of_speech contains underscores (e.g., "noun_pronoun", "preposition_pronoun")
     const hasUnderscoreCompound = partOfSpeech.includes('_');
-    
+
     // Method 2: Check if features array contains multiple distinct parts of speech
     let featuresArray: string[] = [];
     if (Array.isArray((info as any).features)) {
       featuresArray = (info as any).features;
     }
-    
+
     // Extract distinct parts of speech from features array
     const distinctPOS = new Set<string>();
     if (featuresArray.length > 0) {
@@ -112,18 +113,18 @@ export default function WordModal({ word, children }: WordModalProps) {
         if (fLower === 'particle' && !distinctPOS.has('Preposition')) distinctPOS.add('Particle');
       });
     }
-    
+
     // Method 3: Detect pronoun suffixes from Arabic text if not already detected
     // Common pronoun suffixes: ـهَا, ـه, ـهم, ـك, ـكِ, ـكُم, ـنَا, etc.
     const arabicWord = arabicText || word.text_arabic || '';
     const hasPronounSuffix = arabicWord && (
-      arabicWord.endsWith('هَا') || 
-      arabicWord.endsWith('ه') || 
-      arabicWord.endsWith('هم') || 
+      arabicWord.endsWith('هَا') ||
+      arabicWord.endsWith('ه') ||
+      arabicWord.endsWith('هم') ||
       arabicWord.endsWith('همُ') ||
       arabicWord.endsWith('همِ') ||
-      arabicWord.endsWith('ك') || 
-      arabicWord.endsWith('كِ') || 
+      arabicWord.endsWith('ك') ||
+      arabicWord.endsWith('كِ') ||
       arabicWord.endsWith('كَ') ||
       arabicWord.endsWith('كُم') ||
       arabicWord.endsWith('كُنَّ') ||
@@ -136,7 +137,7 @@ export default function WordModal({ word, children }: WordModalProps) {
       arabicWord.match(/[هك]ِ$/) ||  // ends with هِ or كِ
       arabicWord.match(/[هك]َ$/)     // ends with هَ or كَ
     );
-    
+
     // If we detect a pronoun suffix but it's not in the features, add it
     if (hasPronounSuffix && !distinctPOS.has('Pronoun') && !hasUnderscoreCompound) {
       distinctPOS.add('Pronoun');
@@ -145,15 +146,15 @@ export default function WordModal({ word, children }: WordModalProps) {
         distinctPOS.add('Noun');
       }
     }
-    
+
     // Extract case from features array if not in case field
     const getCase = (): string | null => {
       if (info.case) return info.case;
       if (Array.isArray(info.features)) {
-        const caseFeature = info.features.find((f: string) => 
-          f && (f.toLowerCase() === 'nominative' || 
-                f.toLowerCase() === 'accusative' || 
-                f.toLowerCase() === 'genitive')
+        const caseFeature = info.features.find((f: string) =>
+          f && (f.toLowerCase() === 'nominative' ||
+            f.toLowerCase() === 'accusative' ||
+            f.toLowerCase() === 'genitive')
         );
         if (caseFeature) return caseFeature.toLowerCase();
       }
@@ -166,7 +167,7 @@ export default function WordModal({ word, children }: WordModalProps) {
       const pronounPerson = (info as any).pronoun_person;
       const pronounNumber = (info as any).pronoun_number;
       const pronounGender = (info as any).pronoun_gender;
-      
+
       if (pronounPerson && pronounNumber) {
         // Third person
         if (pronounPerson === 'third') {
@@ -199,19 +200,19 @@ export default function WordModal({ word, children }: WordModalProps) {
           }
         }
       }
-      
+
       // Fallback: Check for pronoun type in features (e.g., "third person feminine singular" -> "her/it")
       if (Array.isArray(info.features)) {
         const pronounFeatures = info.features.filter((f: string) => {
           const fLower = f.toLowerCase();
-          return fLower.includes('pronoun') || 
-                 fLower.includes('feminine') || 
-                 fLower.includes('masculine') ||
-                 fLower.includes('third') ||
-                 fLower.includes('second') ||
-                 fLower.includes('first');
+          return fLower.includes('pronoun') ||
+            fLower.includes('feminine') ||
+            fLower.includes('masculine') ||
+            fLower.includes('third') ||
+            fLower.includes('second') ||
+            fLower.includes('first');
         });
-        
+
         // Try to determine pronoun meaning from features
         if (pronounFeatures.some(f => f.toLowerCase().includes('feminine') && f.toLowerCase().includes('singular'))) {
           return 'her/it';
@@ -227,7 +228,7 @@ export default function WordModal({ word, children }: WordModalProps) {
           return 'me/us';
         }
       }
-      
+
       // Check if pronoun type is explicitly set
       if ((info as any).pronoun) {
         const pronounType = (info as any).pronoun.toLowerCase();
@@ -236,7 +237,7 @@ export default function WordModal({ word, children }: WordModalProps) {
         if (pronounType.includes('plural')) return 'them';
         if (pronounType.includes('dual')) return 'them (dual)';
       }
-      
+
       return null;
     };
 
@@ -245,14 +246,14 @@ export default function WordModal({ word, children }: WordModalProps) {
       const parts: string[] = [];
       const nounCase = getCase();
       const pronounDetails = getPronounDetails();
-      
+
       // Handle underscore format (e.g., "noun_pronoun")
       if (hasUnderscoreCompound) {
         const posParts = partOfSpeech.split('_');
         posParts.forEach((pos, index) => {
           const posLower = pos.toLowerCase();
           const posFormatted = pos.charAt(0).toUpperCase() + pos.slice(1).toLowerCase();
-          
+
           if (posLower === 'noun' && nounCase) {
             parts.push(`${posFormatted}: ${nounCase}`);
           } else if (posLower === 'pronoun' && pronounDetails) {
@@ -274,7 +275,7 @@ export default function WordModal({ word, children }: WordModalProps) {
           if (a !== 'Pronoun' && a !== 'Noun' && b === 'Pronoun') return 1;
           return 0;
         });
-        
+
         posArray.forEach((pos) => {
           if (pos === 'Noun' && nounCase) {
             parts.push(`${pos}: ${nounCase}`);
@@ -287,7 +288,7 @@ export default function WordModal({ word, children }: WordModalProps) {
           }
         });
       }
-      
+
       return parts.join(', ');
     }
 
@@ -295,10 +296,10 @@ export default function WordModal({ word, children }: WordModalProps) {
     const getPerson = (): string | null => {
       if (info.person) return info.person;
       if (Array.isArray(info.features)) {
-        const personFeature = info.features.find((f: string) => 
-          f && (f.toLowerCase().includes('first') || 
-                f.toLowerCase().includes('second') || 
-                f.toLowerCase().includes('third'))
+        const personFeature = info.features.find((f: string) =>
+          f && (f.toLowerCase().includes('first') ||
+            f.toLowerCase().includes('second') ||
+            f.toLowerCase().includes('third'))
         );
         if (personFeature) {
           if (personFeature.toLowerCase().includes('first')) return 'first';
@@ -312,10 +313,10 @@ export default function WordModal({ word, children }: WordModalProps) {
     const getNumber = (): string | null => {
       if (info.number) return info.number;
       if (Array.isArray(info.features)) {
-        const numberFeature = info.features.find((f: string) => 
-          f && (f.toLowerCase().includes('singular') || 
-                f.toLowerCase().includes('dual') || 
-                f.toLowerCase().includes('plural'))
+        const numberFeature = info.features.find((f: string) =>
+          f && (f.toLowerCase().includes('singular') ||
+            f.toLowerCase().includes('dual') ||
+            f.toLowerCase().includes('plural'))
         );
         if (numberFeature) {
           if (numberFeature.toLowerCase().includes('singular')) return 'singular';
@@ -330,9 +331,9 @@ export default function WordModal({ word, children }: WordModalProps) {
     const getGender = (): string | null => {
       if (info.gender) return info.gender;
       if (Array.isArray(info.features)) {
-        const genderFeature = info.features.find((f: string) => 
-          f && (f.toLowerCase().includes('masculine') || 
-                f.toLowerCase().includes('feminine'))
+        const genderFeature = info.features.find((f: string) =>
+          f && (f.toLowerCase().includes('masculine') ||
+            f.toLowerCase().includes('feminine'))
         );
         if (genderFeature) {
           if (genderFeature.toLowerCase().includes('masculine')) return 'masculine';
@@ -346,11 +347,11 @@ export default function WordModal({ word, children }: WordModalProps) {
     const getTense = (): string | null => {
       if (info.tense) return info.tense;
       if (Array.isArray(info.features)) {
-        const tenseFeature = info.features.find((f: string) => 
-          f && (f.toLowerCase().includes('present') || 
-                f.toLowerCase().includes('past') || 
-                f.toLowerCase().includes('imperative') ||
-                f.toLowerCase().includes('future'))
+        const tenseFeature = info.features.find((f: string) =>
+          f && (f.toLowerCase().includes('present') ||
+            f.toLowerCase().includes('past') ||
+            f.toLowerCase().includes('imperative') ||
+            f.toLowerCase().includes('future'))
         );
         if (tenseFeature) {
           if (tenseFeature.toLowerCase().includes('present')) return 'present';
@@ -366,11 +367,11 @@ export default function WordModal({ word, children }: WordModalProps) {
     const getMood = (): string | null => {
       if (info.mood) return info.mood;
       if (Array.isArray(info.features)) {
-        const moodFeature = info.features.find((f: string) => 
-          f && (f.toLowerCase().includes('indicative') || 
-                f.toLowerCase().includes('subjunctive') || 
-                f.toLowerCase().includes('jussive') ||
-                f.toLowerCase().includes('imperative'))
+        const moodFeature = info.features.find((f: string) =>
+          f && (f.toLowerCase().includes('indicative') ||
+            f.toLowerCase().includes('subjunctive') ||
+            f.toLowerCase().includes('jussive') ||
+            f.toLowerCase().includes('imperative'))
         );
         if (moodFeature) {
           if (moodFeature.toLowerCase().includes('indicative')) return 'indicative';
@@ -404,22 +405,22 @@ export default function WordModal({ word, children }: WordModalProps) {
       const gender = getGender() || info.gender;
       const tense = getTense() || info.tense;
       const mood = getMood() || info.mood;
-      
+
       // Add form first if available (important for understanding verb meaning)
       if (form) {
         parts.push(form.toLowerCase()); // "Form 1" -> "form 1"
       }
-      
+
       // Add aspect if available (perfect/imperfect/imperative)
       if (aspect) {
         parts.push(aspect);
       }
-      
+
       // Add voice if available
       if (voice) {
         parts.push(voice);
       }
-      
+
       // Build descriptive string: "first-person plural" or "masculine plural"
       if (person && number) {
         parts.push(`${person}-person ${number}`);
@@ -433,21 +434,21 @@ export default function WordModal({ word, children }: WordModalProps) {
       } else if (gender) {
         parts.push(gender);
       }
-      
+
       // Add tense if available
       if (tense) {
         parts.push(`${tense} tense`);
       }
-      
+
       // Add mood if available
       if (mood) {
         parts.push(mood);
       }
-      
+
       if (parts.length > 0) {
         return `${partOfSpeech}: ${parts.join(', ')}`;
       }
-      
+
       // Fallback: just show tense if available
       if (tense) {
         return `${partOfSpeech}: ${tense}`;
@@ -544,7 +545,7 @@ export default function WordModal({ word, children }: WordModalProps) {
                     Translation
                   </label>
                   <p className="text-lg text-gray-900" style={{ textAlign: 'left' }}>
-                    {word.translation_english}
+                    {cleanTranslation(word.translation_english, word.grammar_info)}
                   </p>
                 </div>
               )}

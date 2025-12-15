@@ -234,6 +234,25 @@ ${translation_english ? `- Translation: ${translation_english}` : ''}
 ${verse_context ? `- Verse Context: This word appears in ${surah_name}${verse_context.verse_number ? `, Verse ${verse_context.verse_number}` : ''}` : ''}
 ${verse_context?.full_verse_text ? `- Full verse: ${verse_context.full_verse_text}` : ''}
 
+CRITICAL TRANSLATION RULE:
+- Translate Arabic words by their BASE MEANING ONLY, without adding English prepositions
+- Do NOT translate genitive case nouns with 'of' prepended
+- Do NOT translate accusative case nouns with prepositions
+- The grammatical case (genitive, accusative, nominative) should be explained separately from the word's meaning
+
+Examples:
+✅ CORRECT: اللَّهِ → 'Allah' (in genitive case due to preceding preposition)
+❌ WRONG: اللَّهِ → 'of Allah'
+
+✅ CORRECT: ٱلرَّحۡمَـٰنِ → 'the Most Gracious' (in genitive case)
+❌ WRONG: ٱلرَّحۡمَـٰنِ → 'of the Most Gracious'
+
+Format explanations as:
+- Word meaning: [base translation]
+- Grammatical note: [explain the case and why]
+
+The genitive/possessive relationship is already indicated by the context (e.g., following a preposition like بِسْمِ). Keep translations clean and direct: translate the word itself, then explain the grammatical case separately.
+
 ${buildCompoundWordInstruction(word_data)}
 ${buildContextualGuidance(verse_context, grammar_info)}
 
@@ -243,11 +262,13 @@ Write three paragraphs without any headings, labels, or section titles. Do NOT i
 
 **First paragraph (NO HEADING):**
 - Start with what this word means in THIS verse
+- Use the format: "Word meaning: [base translation]" followed by "Grammatical note: [explain the case and why]"
 - Break down its components:
   * If it has ال (definite article): mention it separately
   * Show the root/stem meaning
   * Identify endings (plural markers, case endings, pronouns)
 - Explain the grammatical classification in context
+- Remember: Translate the BASE MEANING only, then explain the grammatical case separately
 
 **Second paragraph (NO HEADING):**
 - Explain WHY it has this form (what grammatical role it plays)

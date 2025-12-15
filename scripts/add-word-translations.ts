@@ -47,7 +47,6 @@ const ARABIC_WORD_DICTIONARY: Record<string, string> = {
   'وَالنَّاسِ': 'and mankind',
   
   // Common words from Al-Falaq (113) - with actual database characters
-  'قُلۡ': 'Say',
   'قُلْ': 'Say',
   'أَعُوذُ': 'I seek refuge',
   'بِرَبِّ': 'with the Lord',

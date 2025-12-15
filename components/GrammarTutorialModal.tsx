@@ -72,6 +72,7 @@ export default function GrammarTutorialModal({
             .select(`
               word_position,
               verse_id,
+              translation_english,
               verses!inner (
                 id,
                 verse_number,
@@ -106,6 +107,7 @@ export default function GrammarTutorialModal({
               full_verse_text: verse.text_arabic,
               surrounding_words: surroundingWords || [],
               word_position: wordData.word_position,
+              translation_english: wordData.translation_english || null,
             };
           }
         } catch (contextError) {
@@ -163,10 +165,10 @@ export default function GrammarTutorialModal({
     }
 
     const partOfSpeech = grammarInfo.part_of_speech || '';
-    const isCompound = partOfSpeech.includes('_pronoun') || 
-                      (Array.isArray(grammarInfo.features) && 
-                       grammarInfo.features.includes('pronoun') && 
-                       (grammarInfo.features.includes('noun') || grammarInfo.features.includes('verb')));
+    const isCompound = partOfSpeech.includes('_pronoun') ||
+      (Array.isArray(grammarInfo.features) &&
+        grammarInfo.features.includes('pronoun') &&
+        (grammarInfo.features.includes('noun') || grammarInfo.features.includes('verb')));
 
     if (!isCompound) {
       return <span>{arabicText}</span>;
@@ -188,7 +190,7 @@ export default function GrammarTutorialModal({
     // Try to find and split the suffix
     let stem = arabicText;
     let suffix = '';
-    
+
     for (const suffixPattern of pronounSuffixes) {
       if (arabicText.endsWith(suffixPattern)) {
         suffix = suffixPattern;
@@ -299,7 +301,7 @@ export default function GrammarTutorialModal({
       const pronounPerson = (info as any).pronoun_person;
       const pronounNumber = (info as any).pronoun_number;
       const pronounGender = (info as any).pronoun_gender;
-      
+
       if (pronounPerson && pronounNumber) {
         // Third person
         if (pronounPerson === 'third') {
@@ -332,7 +334,7 @@ export default function GrammarTutorialModal({
           }
         }
       }
-      
+
       // Fallback: Check for pronoun type in features (e.g., "third person feminine singular" -> "her/it")
       if (Array.isArray(info.features)) {
         const pronounFeatures = info.features.filter((f: string) => {
@@ -731,7 +733,7 @@ export default function GrammarTutorialModal({
                   ul: ({ node, ...props }) => <ul className="list-disc ml-6 mb-4 space-y-2" {...props} />,
                   ol: ({ node, ...props }) => <ol className="list-decimal ml-6 mb-4 space-y-2" {...props} />,
                   li: ({ node, ...props }) => <li className="text-gray-800 leading-relaxed" {...props} />,
-                  code: ({ node, inline, ...props }) =>
+                  code: ({ node, inline, ...props }: any) =>
                     inline ? (
                       <code className="bg-gray-100 px-1.5 py-0.5 rounded text-sm font-mono text-gray-900" {...props} />
                     ) : (

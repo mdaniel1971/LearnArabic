@@ -88,7 +88,7 @@ export default function QuizHistoryPage() {
       });
 
       // Fetch explanations from quiz_bank for all questions
-      const surahIds = [...new Set((attemptsData || []).map((a: any) => a.surah_id))];
+      const surahIds = Array.from(new Set((attemptsData || []).map((a: any) => a.surah_id)));
       const { data: quizBankData, error: quizBankError } = await supabase
         .from('quiz_bank')
         .select('question_text, explanation, surah_id')

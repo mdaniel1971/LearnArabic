@@ -13,7 +13,7 @@ interface SurahPageProps {
 
 export default async function SurahPage({ params }: SurahPageProps) {
   const surahId = parseInt(params.id);
-  
+
   if (isNaN(surahId)) {
     redirect("/dashboard");
   }
@@ -101,12 +101,15 @@ export default async function SurahPage({ params }: SurahPageProps) {
             <p className="text-gray-600 mb-6">
               {surah.total_verses} Ayahs
             </p>
-            <Link 
+            <Link
               href={`/surah/${surah.surah_number}/quiz`}
               className="inline-block w-full max-w-md bg-primary-600 text-white py-3 px-6 rounded-lg text-center font-semibold hover:bg-primary-700 transition-colors"
             >
               📝 Take Quiz
             </Link>
+            <p className="text-sm text-gray-600 mt-4 font-bold">
+              Select words to see translations and grammar notes
+            </p>
           </div>
         </div>
 

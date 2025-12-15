@@ -4,20 +4,20 @@ import { NextRequest, NextResponse } from 'next/server';
 export async function POST(request: NextRequest) {
   try {
     const { surahId } = await request.json();
-    
+
     if (!process.env.MISTRAL_API_KEY) {
-      return NextResponse.json({ 
-        error: 'MISTRAL_API_KEY is not configured. Please add it to your .env.local file.' 
+      return NextResponse.json({
+        error: 'MISTRAL_API_KEY is not configured. Please add it to your .env.local file.'
       }, { status: 500 });
     }
-    
+
     const supabase = await createClient();
 
     // Verify user is authenticated
     const { data: { user }, error: userError } = await supabase.auth.getUser();
     if (userError || !user) {
-      return NextResponse.json({ 
-        error: 'Authentication required to generate quiz' 
+      return NextResponse.json({
+        error: 'Authentication required to generate quiz'
       }, { status: 401 });
     }
 
@@ -51,7 +51,7 @@ export async function POST(request: NextRequest) {
 
     // Prepare data for LLM with explicit word IDs
     const wordsData = surahData.verses?.flatMap((v: any) => v.words || []) || [];
-    
+
     const prompt = `You are creating a 10-question quiz for Surah ${surahData.name_english} (${surahData.name_arabic}) to test Quranic Arabic comprehension.
 
 Available words and their data (use the word_id number for word meaning questions):
@@ -163,17 +163,17 @@ IMPORTANT FOR EXPLANATIONS:
     }
 
     const mistralData = await mistralResponse.json();
-    
+
     if (!mistralData.choices || !mistralData.choices[0] || !mistralData.choices[0].message) {
       console.error('Unexpected Mistral API response:', mistralData);
       throw new Error('Invalid response from Mistral AI. Please check the API key and try again.');
     }
-    
+
     let questionsText = mistralData.choices[0].message.content.trim();
-    
+
     // Clean up response - remove markdown code blocks if present
     questionsText = questionsText.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
-    
+
     let questions;
     try {
       questions = JSON.parse(questionsText);
@@ -193,7 +193,7 @@ IMPORTANT FOR EXPLANATIONS:
       if (q.question) {
         // Remove transliteration in parentheses (e.g., "(ar-raḥmāni)" -> removed)
         q.question = q.question.replace(/\s*\([^)]*[a-z][^)]*\)/gi, '');
-        
+
         // Remove word_id references
         q.question = q.question
           .replace(/word\s+with\s+word_id\s+\d+\s*/gi, "word ")
@@ -201,7 +201,7 @@ IMPORTANT FOR EXPLANATIONS:
           .replace(/\(word_id\s*:\s*\d+\)/gi, '')
           .replace(/\s*\(word_id\s+\d+\)/gi, '')
           .trim();
-        
+
         // If we have a word_id, try to get the Arabic word from wordsData
         if (q.word_id) {
           const wordData = wordsData.find((w: any) => w.id === q.word_id);
@@ -217,7 +217,7 @@ IMPORTANT FOR EXPLANATIONS:
           }
         }
       }
-      
+
       // Replace transliteration in options with Arabic terms
       if (q.options && Array.isArray(q.options)) {
         q.options = q.options.map((opt: string) => {
@@ -237,7 +237,7 @@ IMPORTANT FOR EXPLANATIONS:
             .replace(/\(Mudari'\)/gi, '(مضارع)')
             .replace(/\(Amr\)/gi, '(أمر)');
         });
-        
+
         // Also update correct_answer
         q.correct_answer = q.correct_answer
           .replace(/\(Jarr\)/gi, '(جر)')
@@ -254,7 +254,7 @@ IMPORTANT FOR EXPLANATIONS:
           .replace(/\(Mudari'\)/gi, '(مضارع)')
           .replace(/\(Amr\)/gi, '(أمر)');
       }
-      
+
       // Fix isolated Arabic diacritics in explanations
       if (q.explanation) {
         const diacriticMap: Record<string, string> = {
@@ -267,18 +267,18 @@ IMPORTANT FOR EXPLANATIONS:
           '\u064C': 'un', // dammatan
           '\u064D': 'in', // kasratan
         };
-        
+
         // Replace isolated diacritics in parentheses like (ِ) or (َ) or (ُ)
-        q.explanation = q.explanation.replace(/\((\u064E|\u064F|\u0650|\u0651|\u0652|\u064B|\u064C|\u064D)\)/g, (match, diacritic) => {
+        q.explanation = q.explanation.replace(/\((\u064E|\u064F|\u0650|\u0651|\u0652|\u064B|\u064C|\u064D)\)/g, (match: string, diacritic: string) => {
           const transliteration = diacriticMap[diacritic];
           if (transliteration) {
             return `(pronounced '-${transliteration}')`;
           }
           return '';
         });
-        
+
         // Replace patterns like "kasrah (ِ)" or "a kasrah (ِ)" or "the kasrah (ِ)" with "kasrah (pronounced '-i')"
-        q.explanation = q.explanation.replace(/(a\s+|the\s+)?(kasra[h]?|fatha|damma)\s*\((\u064E|\u064F|\u0650|\u0651|\u0652|\u064B|\u064C|\u064D)\)/gi, (match, article, term, diacritic) => {
+        q.explanation = q.explanation.replace(/(a\s+|the\s+)?(kasra[h]?|fatha|damma)\s*\((\u064E|\u064F|\u0650|\u0651|\u0652|\u064B|\u064C|\u064D)\)/gi, (match: string, article: string, term: string, diacritic: string) => {
           const transliteration = diacriticMap[diacritic];
           if (transliteration) {
             const articleText = article ? article.trim() + ' ' : '';
@@ -286,17 +286,18 @@ IMPORTANT FOR EXPLANATIONS:
           }
           return match;
         });
-        
+
         // Replace patterns like "ends with (ِ)" with "ends with '-i'"
-        q.explanation = q.explanation.replace(/(ends?\s+with|has|contains)\s*\((\u064E|\u064F|\u0650|\u0651|\u0652|\u064B|\u064C|\u064D)\)/gi, (match, verb, diacritic) => {
+        q.explanation = q.explanation.replace(/(ends?\s+with|has|contains)\s*\((\u064E|\u064F|\u0650|\u0651|\u0652|\u064B|\u064C|\u064D)\)/gi, (match: string, verb: string, diacritic: string) => {
           const transliteration = diacriticMap[diacritic];
           if (transliteration) {
             return `${verb} '-${transliteration}'`;
           }
-          return verb;
+          // Return original match to preserve context when transliteration unavailable (e.g., shadda, sukun)
+          return match;
         });
       }
-      
+
       return q;
     });
 
@@ -360,16 +361,16 @@ IMPORTANT FOR EXPLANATIONS:
       throw insertError;
     }
 
-    return NextResponse.json({ 
-      success: true, 
+    return NextResponse.json({
+      success: true,
       questionsGenerated: insertedQuestions?.length || 0
     });
 
   } catch (error: any) {
     console.error('Error generating quiz:', error);
-    return NextResponse.json({ 
+    return NextResponse.json({
       error: error.message,
-      details: error.toString() 
+      details: error.toString()
     }, { status: 500 });
   }
 }

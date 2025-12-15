@@ -19,7 +19,7 @@ export default async function DashboardPage() {
   // Fetch all surahs
   const { data: surahs, error: surahsError } = await supabase
     .from("surahs")
-    .select("surah_number, name_english, name_arabic")
+    .select("surah_number, name_english, name_arabic, total_verses")
     .order("surah_number", { ascending: true });
 
   return (
@@ -28,39 +28,16 @@ export default async function DashboardPage() {
         {/* Header */}
         <div className="flex justify-between items-center mb-8">
           <div>
-            <h1 className="text-4xl font-bold text-gray-900 mb-2">Start Reading</h1>
+            <h1 className="text-4xl font-bold text-gray-900 mb-2">Learn Quranic Arabic</h1>
             <p className="text-gray-600">Welcome back, <span className="font-semibold text-primary-700">{user.email}</span></p>
           </div>
           <LogoutButton />
         </div>
 
-        {/* Info Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
-          <div className="p-5 bg-primary-50 border border-primary-200 rounded-xl">
-            <div className="flex items-start gap-3">
-              <span className="text-2xl">📖</span>
-              <div>
-                <p className="text-gray-900 font-medium mb-1">Grammar Tutorials</p>
-                <p className="text-sm text-gray-600">Click words to learn Arabic grammar</p>
-              </div>
-            </div>
-          </div>
-          <div className="p-5 bg-primary-50 border border-primary-200 rounded-xl">
-            <div className="flex items-start gap-3">
-              <span className="text-2xl">📊</span>
-              <div>
-                <p className="text-gray-900 font-medium mb-1">Quiz History</p>
-                <p className="text-sm text-gray-600">Track your learning progress</p>
-              </div>
-            </div>
-          </div>
-        </div>
-
         {/* Surahs List */}
         <div className="bg-white rounded-xl border border-gray-200 shadow-sm">
-          <div className="p-6 border-b border-gray-200">
-            <h2 className="text-2xl font-semibold text-gray-900">Surahs</h2>
-            <p className="text-sm text-gray-600 mt-1">Choose a surah to study</p>
+          <div className="p-6 border-b border-gray-200 bg-green-50">
+            <h2 className="text-2xl font-semibold text-gray-900">Select a surah</h2>
           </div>
           <div className="p-6">
             {surahs && surahs.length > 0 ? (

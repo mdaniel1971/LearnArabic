@@ -38,7 +38,7 @@ export default async function DashboardPage() {
         <div className="bg-white rounded-xl border border-gray-200 shadow-sm">
           <div className="p-6 border-b border-gray-200 bg-green-50">
             <p className="text-sm text-gray-700 leading-relaxed">
-              Welcome to your Quranic Arabic learning journey. Explore the surahs to discover new words and grammar concepts. Take quizzes to reinforce what you're learning, and track your progress as you build a deeper understanding of the language of the Quran.
+              Welcome to your Quranic Arabic learning journey. Explore the surahs to discover new words and grammar concepts. Take quizzes to reinforce what you&apos;re learning, and track your progress as you build a deeper understanding of the language of the Quran.
             </p>
           </div>
           <div className="p-6">

@@ -37,7 +37,7 @@ export default function QuizPage() {
 
   useEffect(() => {
     loadQuiz();
-  }, [surahNumber]);
+  }, [surahNumber, loadQuiz]);
 
   async function loadQuiz() {
     try {

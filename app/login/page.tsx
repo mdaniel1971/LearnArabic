@@ -65,52 +65,21 @@ export default function LoginPage() {
     }
 
     try {
-      console.log("Starting signup with email:", email);
-      
-      // Verify Supabase client is initialized
-      if (!supabase) {
-        throw new Error("Supabase client not initialized");
-      }
-      
-      // Check if Supabase URL and key are available
-      const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-      const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-      
-      console.log("Supabase config check:", {
-        hasUrl: !!supabaseUrl,
-        hasKey: !!supabaseKey,
-        urlPreview: supabaseUrl ? `${supabaseUrl.substring(0, 20)}...` : "missing",
-        clientExists: !!supabase
-      });
-      
-      if (!supabaseUrl || !supabaseKey) {
-        throw new Error("Supabase configuration is missing. Please check your .env.local file and restart the dev server.");
-      }
-
-      console.log("Calling signUp...");
-      
-      // Add timeout to prevent hanging
-      const signupPromise = supabase.auth.signUp({
+      // Sign up the user
+      const { data, error } = await supabase.auth.signUp({
         email,
         password,
       });
-      
-      const timeoutPromise = new Promise((_, reject) => 
-        setTimeout(() => reject(new Error("Signup request timed out. Please check your internet connection and try again.")), 10000)
-      );
-      
-      const { data, error } = await Promise.race([signupPromise, timeoutPromise]) as any;
-
-      console.log("Signup response received:", { 
-        hasUser: !!data?.user,
-        userId: data?.user?.id,
-        hasSession: !!data?.session,
-        error: error?.message 
-      });
 
       if (error) {
-        console.error("Signup error:", error);
-        setError(error.message || "Signup failed. Please try again.");
+        // Handle specific error cases
+        if (error.message.includes("already registered") || error.message.includes("already exists")) {
+          setError("An account with this email already exists. Please sign in instead.");
+        } else if (error.message.includes("password")) {
+          setError("Password is too weak. Please use a stronger password.");
+        } else {
+          setError(error.message || "Signup failed. Please try again.");
+        }
         setLoading(false);
         return;
       }
@@ -121,55 +90,29 @@ export default function LoginPage() {
         return;
       }
 
-      // Check if we have a session (email confirmation disabled)
-      if (data.session) {
-        // Verify session is set
-        const { data: { session } } = await supabase.auth.getSession();
-        console.log("Session after signup:", session ? "exists" : "missing");
+      // With email confirmation disabled, we should have a session immediately
+      // If not, sign in automatically
+      let session = data.session;
 
-        if (!session) {
-          setError("Account created but session not accessible. Please try signing in.");
+      if (!session) {
+        // Sign in immediately to get session
+        const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
+          email,
+          password,
+        });
+
+        if (signInError) {
+          setError("Account created but could not sign you in. Please try signing in manually.");
           setLoading(false);
           return;
         }
 
-        // Small delay to ensure cookies are written
-        await new Promise(resolve => setTimeout(resolve, 100));
-
-        // Force full page reload
-        window.location.href = "/dashboard";
-        return;
-      }
-
-      // No session - try to sign in immediately
-      console.log("No session after signup, attempting sign in...");
-      const { error: signInError, data: signInData } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      });
-
-      console.log("Sign in response:", {
-        hasSession: !!signInData?.session,
-        error: signInError?.message
-      });
-
-      if (signInError) {
-        console.error("Sign in after signup error:", signInError);
-        setError(
-          "Account created! However, you may need to confirm your email. Please check your email inbox or try signing in."
-        );
-        setLoading(false);
-        return;
+        session = signInData.session;
       }
 
       // Verify session is set
-      const { data: { session } } = await supabase.auth.getSession();
-      console.log("Session after signup/signin:", session ? "exists" : "missing");
-
       if (!session) {
-        setError(
-          "Account created! However, you may need to confirm your email. Please check your email inbox or try signing in."
-        );
+        setError("Account created but session not accessible. Please try signing in.");
         setLoading(false);
         return;
       }
@@ -177,11 +120,10 @@ export default function LoginPage() {
       // Small delay to ensure cookies are written
       await new Promise(resolve => setTimeout(resolve, 100));
 
-      // Force full page reload
-      console.log("Redirecting to /dashboard");
+      // Redirect to dashboard
       window.location.href = "/dashboard";
     } catch (error: any) {
-      console.error("Signup error details:", error);
+      console.error("Signup error:", error);
       setError(error.message || "An error occurred during signup. Please try again.");
       setLoading(false);
     }
@@ -202,8 +144,8 @@ export default function LoginPage() {
             {mode === null
               ? "Welcome"
               : mode === "signin"
-              ? "Sign in to your account"
-              : "Create your account"}
+                ? "Sign in to your account"
+                : "Create your account"}
           </h2>
         </div>
 
@@ -278,8 +220,8 @@ export default function LoginPage() {
                 {loading
                   ? "Loading..."
                   : mode === "signin"
-                  ? "Sign in"
-                  : "Sign up"}
+                    ? "Sign in"
+                    : "Sign up"}
               </button>
               <button
                 type="button"

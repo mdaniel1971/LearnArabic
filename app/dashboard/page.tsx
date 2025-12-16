@@ -56,7 +56,7 @@ export default async function DashboardPage() {
                         </div>
                         <div className="text-left">
                           <p className="font-semibold text-gray-900 mb-1">{surah.name_english}</p>
-                          <p dir="rtl" className="font-arabic text-primary-700" style={{ fontFamily: 'Amiri, serif', fontSize: '16px', direction: 'rtl' }}>
+                          <p dir="rtl" className="font-arabic text-primary-700 text-2xl md:text-3xl font-semibold p-2" style={{ fontFamily: 'Amiri, serif', direction: 'rtl' }}>
                             {surah.name_arabic}
                           </p>
                           <p className="text-xs text-gray-500 mt-1">{surah.total_verses} Ayahs</p>

@@ -37,7 +37,9 @@ export default async function DashboardPage() {
         {/* Surahs List */}
         <div className="bg-white rounded-xl border border-gray-200 shadow-sm">
           <div className="p-6 border-b border-gray-200 bg-green-50">
-            <h2 className="text-2xl font-semibold text-gray-900">Select a surah</h2>
+            <p className="text-sm text-gray-700 leading-relaxed">
+              Welcome to your Quranic Arabic learning journey. Explore the surahs to discover new words and grammar concepts. Take quizzes to reinforce what you're learning, and track your progress as you build a deeper understanding of the language of the Quran.
+            </p>
           </div>
           <div className="p-6">
             {surahs && surahs.length > 0 ? (
@@ -64,8 +66,8 @@ export default async function DashboardPage() {
                       </Link>
                       <Link
                         href="/quiz-history"
-                        className="absolute top-4 right-4 text-lg opacity-0 group-hover:opacity-100 transition-opacity hover:text-primary-600 z-10"
-                        title="View quiz history"
+                        className="absolute top-4 right-4 text-2xl hover:text-primary-600 transition-colors z-10"
+                        title="View quiz results"
                       >
                         📊
                       </Link>

@@ -520,10 +520,19 @@ export default function WordModal({ word, children }: WordModalProps) {
 
             <div className="space-y-4" dir="ltr" style={{ textAlign: 'left' }}>
               {/* Arabic Word */}
-              <div dir="rtl" className="p-4 bg-gray-50 rounded-lg" style={{ textAlign: 'right', direction: 'rtl' }}>
+              <div dir="ltr" className="p-4 bg-gray-50 rounded-lg flex items-center justify-between" style={{ textAlign: 'left', direction: 'ltr' }}>
                 <ArabicText variant="word" className="text-3xl">
                   {renderColoredArabicWord(word.text_arabic, word.grammar_info)}
                 </ArabicText>
+                {word.grammar_info && (
+                  <button
+                    onClick={handleOpenGrammarTutorial}
+                    className="text-3xl hover:scale-110 transition-transform flex-shrink-0"
+                    title="Learn more about this grammar point"
+                  >
+                    📖
+                  </button>
+                )}
               </div>
 
               {/* Transliteration */}
@@ -616,24 +625,14 @@ export default function WordModal({ word, children }: WordModalProps) {
                       </div>
                     )}
                   </div>
-
-                  {/* Grammar Explanation Button */}
-                  <div className="mt-4">
-                    <button
-                      onClick={handleOpenGrammarTutorial}
-                      className="w-full px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition-colors"
-                    >
-                      Learn more about this grammar point
-                    </button>
-                  </div>
                 </div>
               )}
             </div>
 
-            <div className="mt-6">
+            <div className="mt-6 flex justify-center">
               <button
                 onClick={() => setIsOpen(false)}
-                className="w-full px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 font-semibold transition-colors"
+                className="px-[15px] py-[10px] bg-primary-600 text-white rounded-lg hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 font-semibold transition-colors"
               >
                 Close
               </button>

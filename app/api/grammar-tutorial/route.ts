@@ -191,7 +191,7 @@ export async function POST(request: NextRequest) {
     console.log('grammarSubheading:', grammarSubheading);
     console.log('====================================');
 
-    // Build a focused prompt for the grammar explanation
+    // Build a focused prompt for the grammar tutorial
     const grammarSummary = [
       grammar_info.part_of_speech && `Part of speech: ${grammar_info.part_of_speech}`,
       isCompoundWord && `COMPOUND WORD: This word consists of multiple grammatical parts`,
@@ -405,7 +405,7 @@ Begin your explanation now:`;
   } catch (error: any) {
     console.error("Error generating grammar tutorial:", error);
     return NextResponse.json(
-      { error: error.message || "Failed to generate grammar explanation" },
+      { error: error.message || "Failed to generate grammar tutorial" },
       { status: 500 }
     );
   }

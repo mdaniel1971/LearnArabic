@@ -405,7 +405,7 @@ export default function QuizPage() {
                         <span>{result.question_text.split("'").map((part: string, i: number) => {
                           if (i % 2 === 1) {
                             return (
-                              <span key={i} dir="rtl" className="inline-block" style={{ fontFamily: 'Amiri, serif', fontSize: '33px', direction: 'rtl', textAlign: 'right' }}>
+                              <span key={i} dir="rtl" className="inline-block" style={{ fontFamily: 'Amiri, serif', fontSize: '28px', direction: 'rtl', textAlign: 'right' }}>
                                 {part}
                               </span>
                             );
@@ -523,9 +523,9 @@ export default function QuizPage() {
             <h2 className="text-xl mb-4 font-semibold">
               {questionText.split("'").map((part, i) => {
                 if (i % 2 === 1) {
-                  // This is the Arabic word - make it 2px smaller (33px instead of 35px)
+                  // This is the Arabic word
                   return (
-                    <span key={i} dir="rtl" className="inline-block" style={{ fontFamily: 'Amiri, serif', fontSize: '33px', direction: 'rtl', textAlign: 'right' }}>
+                    <span key={i} dir="rtl" className="inline-block" style={{ fontFamily: 'Amiri, serif', fontSize: '28px', direction: 'rtl', textAlign: 'right' }}>
                       {part}
                     </span>
                   );
@@ -598,7 +598,7 @@ export default function QuizPage() {
                 {currentFeedback.wordId && currentFeedback.arabicWord && (
                   <button
                     onClick={() => openGrammarTutorial(currentFeedback.wordId, currentFeedback.arabicWord)}
-                    className="absolute top-2 right-2 text-2xl hover:scale-110 transition-transform cursor-pointer"
+                    className="absolute top-2 right-2 text-4xl hover:scale-110 transition-transform cursor-pointer"
                     title="Learn about this grammar point"
                   >
                     📖
@@ -632,7 +632,7 @@ export default function QuizPage() {
             <button
               onClick={previousQuestion}
               disabled={currentQuestion === 0}
-              className="px-6 py-3 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              className="px-[15px] py-3 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 disabled:opacity-50 disabled:cursor-not-allowed transition-colors w-[120px]"
             >
               Previous
             </button>
@@ -640,7 +640,11 @@ export default function QuizPage() {
             {currentQuestion < questions.length - 1 ? (
               <button
                 onClick={nextQuestion}
-                className="flex-1 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                disabled={!hasAnswered}
+                className={`px-[15px] py-3 rounded-lg transition-colors disabled:cursor-not-allowed w-[120px] ${hasAnswered
+                  ? 'bg-green-600 text-white hover:bg-green-700'
+                  : 'bg-gray-200 text-gray-800 hover:bg-gray-300'
+                  }`}
               >
                 Next
               </button>

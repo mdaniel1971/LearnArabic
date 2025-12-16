@@ -113,13 +113,13 @@ export default async function SurahPage({ params }: SurahPageProps) {
         <div className="mb-6">
           <Link
             href="/dashboard"
-            className="text-primary-600 hover:text-primary-700 font-medium inline-flex items-center gap-2"
+            className="text-primary-600 hover:text-primary-700 font-medium inline-flex items-center gap-2 px-[10px] py-[10px]"
           >
             <span>←</span> Back to Dashboard
           </Link>
         </div>
         {/* Surah Header */}
-        <div className="bg-white border border-gray-200 rounded-xl shadow-sm p-8 mb-8">
+        <div className="bg-green-50 border border-gray-200 rounded-xl shadow-sm p-8 mb-8">
           <div className="text-center">
             <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-primary-100 text-primary-700 font-bold text-lg mb-4">
               {surah.surah_number}
@@ -137,17 +137,20 @@ export default async function SurahPage({ params }: SurahPageProps) {
             <p className="text-gray-600 mb-6">
               {surah.total_verses} Ayahs
             </p>
-            <Link
-              href={`/surah/${surah.surah_number}/quiz`}
-              className="inline-block w-full max-w-md bg-primary-600 text-white py-3 px-6 rounded-lg text-center font-semibold hover:bg-primary-700 transition-colors"
-            >
-              📝 Take Quiz
-            </Link>
-            <p className="text-sm text-gray-600 mt-4 font-bold">
-              Select words to see translations and grammar notes
-            </p>
+            <div className="flex items-center justify-center">
+              <Link
+                href={`/surah/${surah.surah_number}/quiz`}
+                className="px-[15px] py-[8px] bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors font-semibold"
+              >
+                Take quiz
+              </Link>
+            </div>
           </div>
         </div>
+
+        <p className="text-gray-600 my-4 text-left">
+          Select a word to see its translation and grammar. In the Word Details box, select the grammar tutorial icon 📖 to learn more through examples from the Quran.
+        </p>
 
         {/* Bismillah - Display for all surahs except Al-Fatiha (1) and At-Tawbah (9) */}
         {shouldShowBismillah && bismillahWords.length > 0 && (

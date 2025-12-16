@@ -6,6 +6,9 @@ interface QuizGenerationResult {
   error?: string;
 }
 
+// Export the interface for use in scripts
+export type { QuizGenerationResult };
+
 /**
  * Generates a quiz for a given surah
  * This is the core quiz generation logic extracted from the API route
@@ -54,13 +57,29 @@ export async function generateQuizForSurah(
     // Prepare data for LLM with explicit word IDs
     const wordsData = surahData.verses?.flatMap((v: any) => v.words || []) || [];
 
+    // Build verse context with translations for grammar questions
+    const verseContexts = surahData.verses?.map((v: any) => {
+      const verseWords = v.words || [];
+      const verseTranslation = verseWords
+        .sort((a: any, b: any) => a.word_position - b.word_position)
+        .map((w: any) => w.translation_english || '')
+        .filter((t: string) => t)
+        .join(' ');
+      return {
+        verse_number: v.verse_number,
+        text_arabic: v.text_arabic,
+        translation: verseTranslation,
+        words: verseWords
+      };
+    }) || [];
+
     const prompt = `You are creating a 10-question quiz for Surah ${surahData.name_english} (${surahData.name_arabic}) to test Quranic Arabic comprehension.
 
 Available words and their data (use the word_id number for word meaning questions):
 ${wordsData.map((w: any) => `- word_id: ${w.id}, Arabic: ${w.text_arabic} (${w.transliteration || 'N/A'}): ${w.translation_english || 'N/A'}${w.grammar_info ? `, Grammar: ${JSON.stringify(w.grammar_info)}` : ''}`).join('\n')}
 
-Verse Arabic text:
-${surahData.verses?.map((v: any) => `Verse ${v.verse_number}: ${v.text_arabic}`).join('\n') || ''}
+Verse context (Arabic text with English translation):
+${verseContexts.map((v: any) => `Verse ${v.verse_number}: ${v.text_arabic} (${v.translation || 'translation not available'})`).join('\n') || ''}
 
 Create EXACTLY 10 questions with this distribution:
 - 4 word meaning questions (multiple choice) - test Arabic word → English meaning
@@ -68,24 +87,39 @@ Create EXACTLY 10 questions with this distribution:
 - 2 phrase translation questions (multiple choice) - test translation of 2-3 word phrases
 - 1 comprehension question (multiple choice) - test overall understanding of a verse
 
-IMPORTANT: For grammar questions, use Arabic grammar terms in parentheses:
-- Genitive case = "Genitive (جر)"
-- Nominative case = "Nominative (رفع)"
-- Accusative case = "Accusative (نصب)"
-- Definite = "Definite (معرفة)"
-- Indefinite = "Indefinite (نكرة)"
-- Singular = "Singular (مفرد)"
-- Dual = "Dual (مثنى)"
-- Plural = "Plural (جمع)"
-- Masculine = "Masculine (مذكر)"
-- Feminine = "Feminine (مؤنث)"
-- Past tense = "Past (ماضي)"
-- Present tense = "Present (مضارع)"
-- Imperative = "Imperative (أمر)"
-- First person = "First person (متكلم)"
-- Second person = "Second person (مخاطب)"
-- Third person = "Third person (غائب)"
-NEVER use transliteration (romanized Arabic) - always use Arabic script in parentheses.
+CRITICAL: For grammar questions, you MUST use this NEW LEARNER-FRIENDLY FORMAT:
+
+OLD FORMAT (DO NOT USE):
+❌ "What is the grammatical number of the word ٱلۡكَوَاكِبُ?"
+❌ "What grammatical case is 'الرَّحِيمِ' in?"
+❌ "In the phrase 'بِسۡمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ', the word اللَّهِ is:" (MISSING ENGLISH TRANSLATION)
+
+NEW FORMAT (MUST USE - ENGLISH TRANSLATION IS REQUIRED):
+✅ "In the phrase 'وَإِذَا ٱلۡكَوَٰكِبُ ٱنتَثَرَتۡ' (when the stars fall scattered), the word ٱلۡكَوَاكِبُ is:"
+   Options: Singular, Dual, Plural
+
+✅ "In the phrase 'بِسۡمِ ٱللَّهِ ٱلرَّحۡمَـٰنِ ٱلرَّحِیمِ' (In the name of Allah, the Most Gracious, the Most Merciful), the word ٱلرَّحِیمِ is:"
+   Options: Singular, Dual, Plural
+
+MANDATORY: Every grammar question MUST include the English translation in parentheses after the Arabic phrase.
+
+REQUIREMENTS FOR GRAMMAR QUESTIONS:
+1. ALWAYS start with "In the phrase '[Arabic text]' ([English translation]), the word [target word] is:"
+2. Include the full verse phrase (2-5 words) where the target word appears
+3. Include the English translation of that phrase in parentheses
+4. Use PLAIN LANGUAGE for options - NO technical terms:
+   - Instead of "Grammatical number" → ask "singular, dual, or plural"
+   - Instead of "Grammatical case" → ask "nominative, genitive, or accusative" (or use plain descriptions)
+   - Instead of "Definiteness" → ask "definite or indefinite"
+   - Instead of "Gender" → ask "masculine or feminine"
+   - Instead of "Tense" → ask "past tense, present tense, or imperative"
+5. Options should be simple and accessible (e.g., "Singular", "Dual", "Plural" - NOT "Singular (مفرد)")
+6. For case questions, you can use plain descriptions like:
+   - "subject form (nominative)"
+   - "object form (accusative)" 
+   - "after preposition form (genitive)"
+7. NEVER mention word_id in the question text
+8. Include the word_id as a NUMBER in the JSON (for database reference only)
 
 CRITICAL FORMATTING REQUIREMENTS:
 1. Return ONLY valid JSON, no markdown, no code blocks, no backticks
@@ -98,10 +132,15 @@ CRITICAL FORMATTING REQUIREMENTS:
    - NEVER mention word_id anywhere in the question text
    - Include the word_id as a NUMBER in the JSON (for database reference only, not in question text)
 5. For grammar questions:
-   - ALWAYS write the question like this: "What part of speech is 'نَعْبُدُ'?"
+   - ALWAYS use the NEW FORMAT: "In the phrase '[Arabic phrase]' ([English translation]), the word [target word] is:"
+   - Include the verse phrase (2-5 words) where the target word appears
+   - MANDATORY: Include English translation of the phrase in parentheses - this is REQUIRED, not optional
+   - Use the verse context provided above to get the correct English translation
+   - Use PLAIN LANGUAGE options (e.g., "Singular", "Dual", "Plural" - NOT "Singular (مفرد)")
    - NEVER include transliteration in parentheses - just the Arabic word
    - NEVER write "What part of speech is the word with word_id X?" - this is FORBIDDEN
    - NEVER mention word_id anywhere in the question text
+   - NEVER omit the English translation - every grammar question must have "(English translation)" after the Arabic phrase
    - Specify the grammar_point being tested as a string
    - Include the word_id as a NUMBER in the JSON (for database reference only, not in question text)
 6. word_id must be a number or null, never a string or Arabic text
@@ -111,7 +150,14 @@ CRITICAL FORMATTING REQUIREMENTS:
    - "What part of speech is the word with word_id 15 (نَعْبُدُ)?" ❌
 9. EXAMPLES OF GOOD QUESTIONS (USE THESE):
    - "What does the word 'إِيَّاكَ' mean?" ✅ (NO transliteration)
-   - "What part of speech is 'نَعْبُدُ'?" ✅ (NO transliteration)
+   - "In the phrase 'إِيَّاكَ نَعْبُدُ' (You alone we worship), the word نَعْبُدُ is:" ✅
+     Options: ["Verb", "Noun", "Preposition", "Pronoun"]
+   - "In the phrase 'بِسۡمِ ٱللَّهِ' (In the name of Allah), the word ٱللَّهِ is:" ✅
+     Options: ["Singular", "Dual", "Plural"]
+   
+   EXAMPLES OF BAD GRAMMAR QUESTIONS (DO NOT USE):
+   - "In the phrase 'بِسۡمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ', the word اللَّهِ is:" ❌ (MISSING ENGLISH TRANSLATION)
+   - "In the phrase 'إِيَّاكَ نَعْبُدُ', the word نَعْبُدُ is:" ❌ (MISSING ENGLISH TRANSLATION)
 10. NEVER include transliteration in question text - only show the Arabic word
 
 Return as a JSON array with this EXACT structure:
@@ -127,12 +173,12 @@ Return as a JSON array with this EXACT structure:
   },
   {
     "type": "multiple_choice",
-    "question": "What grammatical case is the word 'الرَّحِيمِ' in?",
-    "options": ["Genitive (جر)", "Nominative (رفع)", "Accusative (نصب)", "No case"],
-    "correct_answer": "Genitive (جر)",
+    "question": "In the phrase 'بِسۡمِ ٱللَّهِ ٱلرَّحۡمَـٰنِ ٱلرَّحِیمِ' (In the name of Allah, the Most Gracious, the Most Merciful), the word ٱلرَّحِیمِ is:",
+    "options": ["Singular", "Dual", "Plural", "Not applicable"],
+    "correct_answer": "Singular",
     "word_id": 456,
-    "grammar_point": "grammatical_case",
-    "explanation": "The word ends with a kasrah (pronounced '-i') indicating genitive case, as it follows the preposition 'bi' (بِ)."
+    "grammar_point": "number",
+    "explanation": "The word ٱلرَّحِیمِ is singular, referring to one entity (Allah)."
   }
 ]
 

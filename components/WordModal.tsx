@@ -3,6 +3,7 @@
 import { useState } from "react";
 import ArabicText from "./ArabicText";
 import GrammarTutorialModal from "./GrammarTutorialModal";
+import FlashcardButton from "./FlashcardButton";
 import { Word, GrammarInfo } from "@/types/quran";
 import { cleanTranslation } from "@/utils/translation";
 
@@ -519,11 +520,6 @@ export default function WordModal({ word, children }: WordModalProps) {
                 <h3 className="text-xl font-semibold text-gray-900 text-left">
                   Word Details
                 </h3>
-                {word.grammar_info && (
-                  <p className="text-sm text-gray-600 mt-1 text-left">
-                    {buildGrammarSubtitle(word.grammar_info, word.text_arabic)}
-                  </p>
-                )}
               </div>
             </div>
 
@@ -533,15 +529,18 @@ export default function WordModal({ word, children }: WordModalProps) {
                 <ArabicText variant="word" className="text-3xl">
                   {renderColoredArabicWord(word.text_arabic, word.grammar_info)}
                 </ArabicText>
-                {word.grammar_info && (
-                  <button
-                    onClick={handleOpenGrammarTutorial}
-                    className="text-3xl hover:scale-110 transition-transform flex-shrink-0"
-                    title="Learn more about this grammar point"
-                  >
-                    📖
-                  </button>
-                )}
+                <div className="flex items-center gap-3">
+                  <FlashcardButton wordId={word.id} />
+                  {word.grammar_info && (
+                    <button
+                      onClick={handleOpenGrammarTutorial}
+                      className="text-3xl hover:scale-110 transition-transform flex-shrink-0"
+                      title="Learn more about this grammar point"
+                    >
+                      📖
+                    </button>
+                  )}
+                </div>
               </div>
 
               {/* Transliteration */}

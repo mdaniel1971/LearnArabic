@@ -29,9 +29,17 @@ export default async function DashboardPage() {
         <div className="flex justify-between items-center mb-8">
           <div>
             <h1 className="text-4xl font-bold text-gray-900 mb-2">Learn Quranic Arabic</h1>
-            <p className="text-gray-600">Welcome back, <span className="font-semibold text-primary-700">{user.email}</span></p>
+            <p className="text-gray-600">Ahlan, <span className="font-semibold text-primary-700">{user.email}</span></p>
           </div>
-          <LogoutButton />
+          <div className="flex items-center gap-4">
+            <Link
+              href="/flashcards"
+              className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-semibold"
+            >
+              📚 Flashcards
+            </Link>
+            <LogoutButton />
+          </div>
         </div>
 
         {/* Surahs List */}
@@ -65,7 +73,7 @@ export default async function DashboardPage() {
                         </div>
                       </Link>
                       <Link
-                        href="/quiz-history"
+                        href={`/quiz-history?surah=${surah.surah_number}`}
                         className="absolute top-4 right-4 text-2xl hover:text-primary-600 transition-colors z-10"
                         title="View quiz results"
                       >

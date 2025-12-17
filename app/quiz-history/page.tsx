@@ -1,8 +1,8 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { createClient } from '@/utils/supabase/client';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import GrammarTutorialModal from '@/components/GrammarTutorialModal';
 
@@ -32,8 +32,10 @@ interface AttemptWithQuestions extends QuizAttempt {
   allAttempts?: QuizAttempt[]; // All attempts for progress tracking
 }
 
-export default function QuizHistoryPage() {
+function QuizHistoryContent() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const surahNumberParam = searchParams.get('surah');
   const [loading, setLoading] = useState(true);
   const [attempts, setAttempts] = useState<AttemptWithQuestions[]>([]);
   const [expandedAttempts, setExpandedAttempts] = useState<Set<string>>(new Set());
@@ -43,14 +45,14 @@ export default function QuizHistoryPage() {
 
   useEffect(() => {
     loadQuizHistory();
-  }, []);
+  }, [surahNumberParam]);
 
   async function loadQuizHistory() {
     try {
       const supabase = createClient();
 
-      // Get all quiz attempts for the user
-      const { data: attemptsData, error: attemptsError } = await supabase
+      // Build query for quiz attempts
+      let query = supabase
         .from('quiz_attempts')
         .select(`
           id,
@@ -63,7 +65,24 @@ export default function QuizHistoryPage() {
             name_arabic,
             surah_number
           )
-        `)
+        `);
+
+      // Filter by surah if specified
+      if (surahNumberParam) {
+        const surahNumber = parseInt(surahNumberParam);
+        // First, get the surah_id from surah_number
+        const { data: surahData } = await supabase
+          .from('surahs')
+          .select('id')
+          .eq('surah_number', surahNumber)
+          .single();
+
+        if (surahData) {
+          query = query.eq('surah_id', surahData.id);
+        }
+      }
+
+      const { data: attemptsData, error: attemptsError } = await query
         .order('completed_at', { ascending: false });
 
       if (attemptsError) throw attemptsError;
@@ -262,12 +281,21 @@ export default function QuizHistoryPage() {
         {attempts.length === 0 ? (
           <div className="bg-white rounded-lg shadow-md p-8 text-center">
             <p className="text-gray-600">No quiz attempts yet. Take a quiz to see your history here!</p>
-            <Link
-              href="/surah/1"
-              className="mt-4 inline-block text-primary-600 hover:text-primary-700 font-medium"
-            >
-              Take Al-Fatiha Quiz →
-            </Link>
+            {surahNumberParam ? (
+              <Link
+                href={`/surah/${surahNumberParam}/quiz`}
+                className="mt-4 inline-block px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors font-semibold"
+              >
+                Take Quiz
+              </Link>
+            ) : (
+              <Link
+                href="/dashboard"
+                className="mt-4 inline-block text-primary-600 hover:text-primary-700 font-medium"
+              >
+                Go to Dashboard →
+              </Link>
+            )}
           </div>
         ) : (
           <div className="space-y-4">
@@ -527,6 +555,18 @@ export default function QuizHistoryPage() {
         />
       )}
     </div>
+  );
+}
+
+export default function QuizHistoryPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+      </div>
+    }>
+      <QuizHistoryContent />
+    </Suspense>
   );
 }
 

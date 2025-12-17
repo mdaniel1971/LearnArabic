@@ -11,6 +11,7 @@ interface GrammarTutorialModalProps {
   arabicWord: string;
   grammarInfo: GrammarInfo;
   wordId?: number; // Optional: to fetch verse context
+  level?: 'advanced'; // Tutorial difficulty level (only advanced now)
 }
 
 export default function GrammarTutorialModal({
@@ -19,6 +20,7 @@ export default function GrammarTutorialModal({
   arabicWord,
   grammarInfo,
   wordId,
+  level = 'advanced',
 }: GrammarTutorialModalProps) {
   const [explanation, setExplanation] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -125,6 +127,7 @@ export default function GrammarTutorialModal({
           grammar_info: grammarInfo,
           arabic_word: arabicWord,
           verse_context: verseContext,
+          level: level,
         }),
       });
 
@@ -571,7 +574,17 @@ export default function GrammarTutorialModal({
 
       // Add form first if available (important for understanding verb meaning)
       if (form) {
-        parts.push(form.toLowerCase()); // "Form 1" -> "form 1"
+        // Ensure "form" prefix is added if not already present
+        const formStr = String(form).toLowerCase();
+        if (formStr.match(/^\d+$/)) {
+          // If it's just a number, add "form" prefix
+          parts.push(`form ${formStr}`);
+        } else if (!formStr.includes('form')) {
+          // If it doesn't contain "form", add it
+          parts.push(`form ${formStr}`);
+        } else {
+          parts.push(formStr);
+        }
       }
 
       // Add aspect if available (perfect/imperfect/imperative)

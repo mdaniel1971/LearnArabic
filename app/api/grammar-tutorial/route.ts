@@ -79,12 +79,21 @@ function buildContextualGuidance(verse_context: any, grammar_info: any): string 
     guidance.push(`⚠️ PASSIVE VOICE: This is a passive verb. Explain that the subject RECEIVES the action rather than performing it.`);
   }
 
-  // Check for verb form
+  // Check for verb form - only for actual verbs, not adjectives derived from verbs
   if (grammar_info?.form) {
-    const formNum = typeof grammar_info.form === 'string' ? parseInt(grammar_info.form) : grammar_info.form;
+    const partOfSpeech = grammar_info?.part_of_speech?.toLowerCase() || '';
+    const isVerb = partOfSpeech === 'verb' || partOfSpeech.includes('verb');
+    const isAdjective = partOfSpeech === 'adjective' || partOfSpeech.includes('adjective');
+
+    const formNum = typeof grammar_info.form === 'string' ? parseInt(grammar_info.form.replace(/[^0-9]/g, '')) : grammar_info.form;
     if (!isNaN(formNum)) {
-      const formMeaning = getFormMeaning(formNum);
-      guidance.push(`⚠️ VERB FORM ${formNum}: Explain this form's special meaning: ${formMeaning}`);
+      if (isVerb) {
+        const formMeaning = getFormMeaning(formNum);
+        guidance.push(`⚠️ VERB FORM ${formNum}: Explain this form's special meaning: ${formMeaning}`);
+      } else if (isAdjective) {
+        const formMeaning = getFormMeaning(formNum);
+        guidance.push(`⚠️ ADJECTIVE DERIVED FROM FORM ${formNum} VERB: This is an active participle or verbal noun derived from a Form ${formNum} verb. Explain that it's not a verb itself, but a noun/adjective derived from the verb pattern. The Form ${formNum} meaning is: ${formMeaning}`);
+      }
     }
   }
 
@@ -192,6 +201,10 @@ export async function POST(request: NextRequest) {
     console.log('====================================');
 
     // Build a focused prompt for the grammar tutorial
+    const partOfSpeech = grammar_info.part_of_speech?.toLowerCase() || '';
+    const isVerb = partOfSpeech === 'verb' || partOfSpeech.includes('verb');
+    const isAdjective = partOfSpeech === 'adjective' || partOfSpeech.includes('adjective');
+
     const grammarSummary = [
       grammar_info.part_of_speech && `Part of speech: ${grammar_info.part_of_speech}`,
       isCompoundWord && `COMPOUND WORD: This word consists of multiple grammatical parts`,
@@ -200,7 +213,10 @@ export async function POST(request: NextRequest) {
       grammar_info.definiteness && `Definiteness: ${grammar_info.definiteness}`,
       grammar_info.number && `Number: ${grammar_info.number}`,
       grammar_info.gender && `Gender: ${grammar_info.gender}`,
-      grammar_info.form && `Verb form: ${grammar_info.form} (Arabic verb forms I-X, each with distinct meanings and patterns)`,
+      // Only show "Verb form" if it's actually a verb
+      grammar_info.form && isVerb && `Verb form: ${grammar_info.form} (Arabic verb forms I-X, each with distinct meanings and patterns)`,
+      // For adjectives derived from verbs (like active participles), show the form differently
+      grammar_info.form && isAdjective && `Derived from Form ${grammar_info.form} verb (this is an active participle or verbal noun, not a verb itself)`,
       grammar_info.aspect && `Tense: ${grammar_info.aspect === 'perfect' ? 'perfect tense (past tense, completed action)' : grammar_info.aspect === 'imperfect' ? 'imperfect tense (present/future tense, ongoing or incomplete action)' : 'imperative tense (command form)'}`,
       grammar_info.tense && `Tense: ${grammar_info.tense}`,
       grammar_info.person && `Person: ${grammar_info.person}`,
@@ -223,8 +239,56 @@ export async function POST(request: NextRequest) {
     // Get translation if available from verse context
     const translation_english = (verse_context as any)?.translation_english || '';
     const surah_name = verse_context?.surah_name || (verse_context?.surah_number ? `Surah ${verse_context.surah_number}` : '');
+    const verse_phrase = verse_context?.full_verse_text || arabic_word;
 
-    const prompt = `You are teaching Quranic Arabic grammar to English-speaking beginners. Explain this grammar concept clearly and accurately.
+    // Extract and normalize form number from grammar_info
+    let formNumber: number | null = null;
+    if (grammar_info?.form) {
+      const formNum = typeof grammar_info.form === 'string'
+        ? parseInt(grammar_info.form.replace(/[^0-9]/g, ''))
+        : grammar_info.form;
+      if (!isNaN(formNum) && formNum >= 1 && formNum <= 10) {
+        formNumber = formNum;
+      }
+    }
+
+    // Global instruction for all grammar tutorial prompts
+    const globalInstruction = "IMPORTANT: When providing Quranic examples with translations, always give natural, grammatically correct English translations. Do NOT provide word-for-word literal translations that sound awkward. The translation should read fluently as proper English.\n\n";
+
+    // Build form number instruction if form is available
+    let formInstruction = '';
+    if (formNumber !== null) {
+      const formRoman = ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X'][formNumber - 1];
+      if (isVerb) {
+        formInstruction = `\nCRITICAL FORM INFORMATION:\nThe verb form for ${arabic_word} is Form ${formRoman} (Form ${formNumber}). You MUST use this exact form number in your explanation. Do NOT analyze or determine the form yourself - use the form number provided. This is stored in the database and is authoritative.\n\n`;
+      } else if (isAdjective) {
+        formInstruction = `\nCRITICAL FORM INFORMATION:\nThe word ${arabic_word} is derived from Form ${formRoman} (Form ${formNumber}) verb. You MUST use this exact form number when explaining the derivation. Do NOT analyze or determine the form yourself - use the form number provided. This is stored in the database and is authoritative.\n\n`;
+      } else {
+        // For other parts of speech that might have a form (like verbal nouns)
+        formInstruction = `\nCRITICAL FORM INFORMATION:\nThe word ${arabic_word} is related to Form ${formRoman} (Form ${formNumber}). You MUST use this exact form number in your explanation. Do NOT analyze or determine the form yourself - use the form number provided. This is stored in the database and is authoritative.\n\n`;
+      }
+    }
+
+    // Advanced prompt only
+    const grammarConcept = grammarSubheading;
+    const prompt = globalInstruction + formInstruction + `You are teaching Quranic Arabic to an advanced learner seeking scholarly depth.
+
+Provide a comprehensive explanation of ${grammarConcept}:
+- Use classical Arabic grammatical terminology (nahw/sarf)
+${formNumber !== null ? `- ${isVerb ? 'This is' : isAdjective ? 'This word is derived from' : 'This word is related to'} Form ${['I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X'][formNumber - 1]} (Form ${formNumber}). You MUST use this exact form number. Use both Western and Arabic terminology (e.g., Form ${['I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X'][formNumber - 1]}/[Arabic term])` : '- If this is a verb or derived from a verb, identify its form (I-X) using both Western and Arabic terminology (e.g., Form IV/الإفعال)'}
+${formNumber !== null && isAdjective ? `- ALWAYS state explicitly: "${arabic_word} is an Active Participle (or verbal noun) derived from Form ${['I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X'][formNumber - 1]} (Form ${formNumber})"` : formNumber === null ? '- ALWAYS include information on what verb form the word is derived from where possible. For example, if it is an Active Participle derived from Form X, state: "is an Active Participle derived from Form X". If it is a verbal noun (masdar) or other derivative, identify the source verb form.' : ''}
+- Explain linguistic reasoning and etymology where relevant
+- Provide 3-4 examples from different Quranic contexts showing nuance
+- Discuss rhetorical significance (balagha) where applicable
+- Reference classical grammar rules (عامل patterns, إعراب)
+
+Word being studied: ${arabic_word}
+Translation: ${translation_english}
+Context: ${verse_phrase}
+
+Write TWO SHORT PARAGRAPHS maximum. Use bullet points where possible. Treat the learner as a serious student.
+
+CRITICAL: Do NOT include patronizing messages, encouragement phrases, or emojis. Do NOT write things like "Keep practicing—you're doing great! 😊" or similar motivational messages. Focus purely on the grammar explanation.
 
 WORD DETAILS:
 - Arabic: ${arabic_word}
@@ -240,87 +304,8 @@ CRITICAL TRANSLATION RULE:
 - Do NOT translate accusative case nouns with prepositions
 - The grammatical case (genitive, accusative, nominative) should be explained separately from the word's meaning
 
-Examples:
-✅ CORRECT: اللَّهِ → 'Allah' (in genitive case due to preceding preposition)
-❌ WRONG: اللَّهِ → 'of Allah'
-
-✅ CORRECT: ٱلرَّحۡمَـٰنِ → 'the Most Gracious' (in genitive case)
-❌ WRONG: ٱلرَّحۡمَـٰنِ → 'of the Most Gracious'
-
-Format explanations as:
-- Word meaning: [base translation]
-- Grammatical note: [explain the case and why]
-
-The genitive/possessive relationship is already indicated by the context (e.g., following a preposition like بِسْمِ). Keep translations clean and direct: translate the word itself, then explain the grammatical case separately.
-
 ${buildCompoundWordInstruction(word_data)}
-${buildContextualGuidance(verse_context, grammar_info)}
-
-STRUCTURE YOUR EXPLANATION (3 paragraphs, NO HEADINGS):
-
-Write three paragraphs without any headings, labels, or section titles. Do NOT include "Paragraph 1", "Paragraph 2", "Paragraph 3", or any similar labels in your response.
-
-**First paragraph (NO HEADING):**
-- Start with what this word means in THIS verse
-- Use the format: "Word meaning: [base translation]" followed by "Grammatical note: [explain the case and why]"
-- Break down its components:
-  * If it has ال (definite article): mention it separately
-  * Show the root/stem meaning
-  * Identify endings (plural markers, case endings, pronouns)
-- Explain the grammatical classification in context
-- Remember: Translate the BASE MEANING only, then explain the grammatical case separately
-
-**Second paragraph (NO HEADING):**
-- Explain WHY it has this form (what grammatical role it plays)
-- Give 2-3 similar examples from the Quran using this same pattern
-  * Format: "المؤمنون (al-mu'minoon, 'the believers'), الظالمون (adh-dhalimoon, 'the wrongdoers')"
-- Show how recognizing this pattern helps with future reading
-
-**Third paragraph (NO HEADING):**
-- Give ONE clear, actionable tip for spotting this pattern
-- Keep it simple and memorable
-- Focus on visual/auditory markers learners can quickly identify
-
-CRITICAL: Do NOT include any headings like "Paragraph 1 - WHAT & WHERE:" or similar labels. Write the paragraphs directly without any section titles.
-
-WORD BREAKDOWN REQUIREMENTS:
-- For words with ال: ALWAYS mention the definite article separately
-- For plural nouns: ALWAYS identify the specific plural pattern:
-  * Sound masculine plural: ون/ين endings (NOT nunation)
-  * Sound feminine plural: ات ending
-  * Broken/irregular plurals: explain the pattern change
-- For derived words: Show root letters when relevant (e.g., ك-ف-ر for كافر)
-- For compound words: Break down each component with its meaning
-
-TERMINOLOGY ACCURACY:
-- Sound masculine plural = ون (nominative) or ين (genitive/accusative) - NOT nunation
-- Nunation (tanween) = ONLY double diacritics ً ٌ ٍ
-- Nominative case = subject or predicate, marked by -u (damma ُ) or -un (tanween ٌ)
-- Genitive case = after prepositions or in possessive constructions, marked by -i (kasra ِ)
-- Accusative case = direct object, marked by -a (fatha َ)
-- Vocative = addressing/calling someone (after يَا)
-
-PATTERN RECOGNITION:
-After explaining THIS word, give 2-3 similar examples from the Quran that use the same grammatical pattern. This helps learners recognize the pattern in future verses.
-
-Example: "You'll see this same ون ending in المؤمنون (al-mu'minoon, 'the believers'), المسلمون (al-muslimoon, 'the Muslims'), الظالمون (adh-dhalimoon, 'the wrongdoers')."
-
-CONTEXT INTEGRATION:
-- Start with what the word MEANS and DOES in this verse
-- Then explain the grammar that creates that meaning
-- Don't start with generic textbook definitions
-- Connect grammar to actual usage immediately
-
-STYLE REQUIREMENTS:
-- Write in a conversational but precise tone
-- No preambles ("Here's...", "Certainly!", "Let me explain...")
-- Start directly with the word and its meaning
-- Use accessible language while maintaining technical accuracy
-- For diacritics in explanations: write "-i" (kasra), "-a" (fatha), "-u" (damma)
-- Never use isolated Arabic diacritic marks (ِ َ ُ) in running text
-- Use "tense" not "aspect" (e.g., "perfect tense" not "perfect aspect")
-
-Begin your explanation now:`;
+${buildContextualGuidance(verse_context, grammar_info)}`;
 
     // Log the prompt for debugging
     console.log('=== PROMPT DEBUG ===');

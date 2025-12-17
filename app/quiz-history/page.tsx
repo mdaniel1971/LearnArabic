@@ -189,7 +189,7 @@ export default function QuizHistoryPage() {
     });
   }
 
-  async function openGrammarTutorial(wordId: number | null, questionText: string, grammarPoint?: string | null) {
+  async function openGrammarTutorial(wordId: number, questionText: string, grammarPoint?: string | null) {
     if (!wordId) {
       console.warn('Cannot open grammar tutorial - no word_id provided');
       return;
@@ -523,6 +523,7 @@ export default function QuizHistoryPage() {
           arabicWord={grammarTutorialData.arabicWord}
           grammarInfo={grammarTutorialData.grammarInfo}
           wordId={grammarTutorialData.wordId}
+          level="advanced"
         />
       )}
     </div>

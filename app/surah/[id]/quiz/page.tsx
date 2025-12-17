@@ -234,7 +234,7 @@ export default function QuizPage() {
     }
   }
 
-  async function openGrammarTutorial(wordId?: number, arabicWord?: string) {
+  async function openGrammarTutorial(wordId: number, arabicWord?: string) {
     if (!wordId) {
       console.log('Missing word_id for grammar tutorial');
       return;
@@ -598,7 +598,11 @@ export default function QuizPage() {
                 }`}>
                 {currentFeedback.wordId && currentFeedback.arabicWord && (
                   <button
-                    onClick={() => openGrammarTutorial(currentFeedback.wordId, currentFeedback.arabicWord)}
+                    onClick={() => {
+                      if (currentFeedback.wordId) {
+                        openGrammarTutorial(currentFeedback.wordId, currentFeedback.arabicWord);
+                      }
+                    }}
                     className="absolute top-2 right-2 text-4xl hover:scale-110 transition-transform cursor-pointer"
                     title="Learn about this grammar point"
                   >
@@ -680,6 +684,7 @@ export default function QuizPage() {
           arabicWord={grammarTutorialData.arabicWord}
           grammarInfo={grammarTutorialData.grammarInfo}
           wordId={grammarTutorialData.wordId}
+          level="advanced"
         />
       )}
     </div>

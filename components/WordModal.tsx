@@ -15,7 +15,6 @@ export default function WordModal({ word, children }: WordModalProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [isGrammarTutorialOpen, setIsGrammarTutorialOpen] = useState(false);
 
-
   const handleOpenGrammarTutorial = () => {
     if (word.grammar_info) {
       setIsGrammarTutorialOpen(true);
@@ -408,7 +407,17 @@ export default function WordModal({ word, children }: WordModalProps) {
 
       // Add form first if available (important for understanding verb meaning)
       if (form) {
-        parts.push(form.toLowerCase()); // "Form 1" -> "form 1"
+        // Ensure "form" prefix is added if not already present
+        const formStr = String(form).toLowerCase();
+        if (formStr.match(/^\d+$/)) {
+          // If it's just a number, add "form" prefix
+          parts.push(`form ${formStr}`);
+        } else if (!formStr.includes('form')) {
+          // If it doesn't contain "form", add it
+          parts.push(`form ${formStr}`);
+        } else {
+          parts.push(formStr);
+        }
       }
 
       // Add aspect if available (perfect/imperfect/imperative)
@@ -615,7 +624,13 @@ export default function WordModal({ word, children }: WordModalProps) {
                     {word.grammar_info.form && (
                       <div>
                         <span className="font-semibold">Form:</span>{' '}
-                        <span className="text-gray-900">{word.grammar_info.form}</span>
+                        <span className="text-gray-900">
+                          {String(word.grammar_info.form).match(/^\d+$/)
+                            ? `form ${word.grammar_info.form}`
+                            : String(word.grammar_info.form).includes('form')
+                              ? word.grammar_info.form
+                              : `form ${word.grammar_info.form}`}
+                        </span>
                       </div>
                     )}
                     {word.grammar_info.notes && (
@@ -649,6 +664,7 @@ export default function WordModal({ word, children }: WordModalProps) {
           arabicWord={word.text_arabic}
           grammarInfo={word.grammar_info}
           wordId={word.id}
+          level="advanced"
         />
       )}
     </>

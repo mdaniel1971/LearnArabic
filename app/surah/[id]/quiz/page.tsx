@@ -37,7 +37,8 @@ export default function QuizPage() {
 
   useEffect(() => {
     loadQuiz();
-  }, [surahNumber, loadQuiz]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [surahNumber]);
 
   async function loadQuiz() {
     try {

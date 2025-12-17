@@ -445,11 +445,10 @@ export default function QuizHistoryPage() {
                           return (
                             <div
                               key={question.id}
-                              className={`p-4 rounded-lg border-2 relative ${
-                                question.is_correct
-                                  ? 'bg-green-50 border-green-200'
-                                  : 'bg-red-50 border-red-200'
-                              }`}
+                              className={`p-4 rounded-lg border-2 relative ${question.is_correct
+                                ? 'bg-green-50 border-green-200'
+                                : 'bg-red-50 border-red-200'
+                                }`}
                             >
                               {(question.word_id || question.grammar_point) && (
                                 <button

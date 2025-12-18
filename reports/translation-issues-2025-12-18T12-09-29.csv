@@ -1,0 +1,203 @@
+word_id,surah_name,verse_number,word_position,text_arabic,current_translation,previous_word_arabic,previous_word_translation,previous_word_id,next_word_arabic,next_word_translation,suggested_fix,confidence,reason
+1,The Opening (الْفَاتِحَة),1,1,بِسْمِ,In the name of,,,,اللَّهِ,of Allah,Name of,LOW,No previous word in verse
+6,The Opening (الْفَاتِحَة),2,2,لِلَّهِ,is for Allah,الْحَمْدُ,All praise,5,رَبِّ,Lord,Is for Allah,MEDIUM,Previous word exists but is not a known preposition
+17,The Opening (الْفَاتِحَة),5,4,نَسْتَعِينُ,we ask for help,وَإِيَّاكَ,and You alone,16,,,We ask for help,MEDIUM,Previous word exists but is not a known preposition
+19,The Opening (الْفَاتِحَة),6,2,الصِّرَاطَ,to the path,اهْدِنَا,Guide us,18,الْمُسْتَقِيمَ,the straight,Path,MEDIUM,Previous word exists but is not a known preposition
+24,The Opening (الْفَاتِحَة),7,4,عَلَيْهِمْ,upon them,أَنْعَمْتَ,You have bestowed favor,23,غَيْرِ,not,Upon them,MEDIUM,Previous word exists but is not a known preposition
+1775,The Night of Decree (الْقَدْرِ),4,5,بِإِذۡنِ,By  permission,فِيهَا,Therein,1774,رَبِّهِم,Their Lord,Permission,MEDIUM,Previous word exists but is not a known preposition
+1793,The Clear Evidence (الْبَيِّنَةُ),1,9,مُنفَكِّينَ,To be abandoned,وَٱلۡمُشۡرِكِينَ,And the polytheists,1792,حَتَّىٰ,Until,Be abandoned,MEDIUM,Previous word exists but is not a known preposition
+1795,The Clear Evidence (الْبَيِّنَةُ),1,11,تَأۡتِيَهُمُ,Comes to them,حَتَّىٰ,Until,1794,ٱلۡبَيِّنَةُ,The clear evidence,Comes to them,MEDIUM,Previous word exists but is not a known preposition
+1820,The Clear Evidence (الْبَيِّنَةُ),5,4,لِيَعۡبُدُواْ,To worship,إِلَّا,Except,1819,ٱللَّهَ,Allah,Worship,MEDIUM,Previous word exists but is not a known preposition
+1823,The Clear Evidence (الْبَيِّنَةُ),5,7,لَهُ,To Him,مُخۡلِصِينَ,Sincere,1822,ٱلدِّينَ,The religion,Him,MEDIUM,Previous word exists but is not a known preposition
+1826,The Clear Evidence (الْبَيِّنَةُ),5,10,وَيُقِيمُواْ,And to establish,حُنَفَآءَ,Upright,1825,ٱلصَّلَوٰةَ,The prayer,And to establish,MEDIUM,Previous word exists but is not a known preposition
+1828,The Clear Evidence (الْبَيِّنَةُ),5,12,وَيُؤۡتُواْ,And to give,ٱلصَّلَوٰةَ,The prayer,1827,ٱلزَّكَوٰةَۚ,The zakah,And to give,MEDIUM,Previous word exists but is not a known preposition
+1872,The Clear Evidence (الْبَيِّنَةُ),8,15,عَنۡهُمۡ,With them,ٱللَّهُ,Allah,1871,وَرَضُواْ,And they  pleased,M,MEDIUM,Previous word exists but is not a known preposition
+1874,The Clear Evidence (الْبَيِّنَةُ),8,17,عَنۡهُۚ,With Him,وَرَضُواْ,And they  pleased,1873,ذَٰلِكَ,That,Him,MEDIUM,Previous word exists but is not a known preposition
+1876,The Clear Evidence (الْبَيِّنَةُ),8,19,لِمَنۡ,For whoever,ذَٰلِكَ,That,1875,خَشِيَ,Feared,Whoever,MEDIUM,Previous word exists but is not a known preposition
+1889,The Earthquake (الزَّلْزَلَةُ),3,4,لَهَا,With it,مَا,What,1888,,,It,MEDIUM,Previous word exists but is not a known preposition
+1890,The Earthquake (الزَّلْزَلَةُ),4,1,يَوۡمَئِذٖ,That Day,,,,تُحَدِّثُ,It will report,That Day,LOW,No previous word in verse
+1897,The Earthquake (الزَّلْزَلَةُ),6,1,يَوۡمَئِذٖ,That Day,,,,يَصۡدُرُ,Will proceed,That Day,LOW,No previous word in verse
+1901,The Earthquake (الزَّلْزَلَةُ),6,5,لِّيُرَوۡاْ,To be shown,أَشۡتَاتٗا,Scattered groups,1900,أَعۡمَٰلَهُمۡ,Their deeds,Be shown,MEDIUM,Previous word exists but is not a known preposition
+1915,The Chargers (الْعَادِيَاتِ),1,1,وَٱلۡعَٰدِيَٰتِ,By the racers,,,,ضَبۡحٗا,Panting,Racers,LOW,No previous word in verse
+1929,The Chargers (الْعَادِيَاتِ),6,3,لِرَبِّهِۦ,To his Lord,ٱلۡإِنسَٰنَ,Mankind,1928,لَكَنُودٞ,Surely ungrateful,His Lord,MEDIUM,Previous word exists but is not a known preposition
+1936,The Chargers (الْعَادِيَاتِ),8,2,لِحُبِّ,In  love,وَإِنَّهُۥ,And indeed he,1935,ٱلۡخَيۡرِ,Wealth,Love,MEDIUM,Previous word exists but is not a known preposition
+1953,The Chargers (الْعَادِيَاتِ),11,4,يَوۡمَئِذٖ,That Day,بِهِمۡ,About them,1952,لَّخَبِيرُۢ,Surely All-Aware,That Day,MEDIUM,Previous word exists but is not a known preposition
+1992,Competition (التَّكَاثُرُ),1,2,ٱلتَّكَاثُرُ,The competition to increase,أَلۡهَىٰكُمُ,Diverts you,1991,,,The competition to increase,MEDIUM,Previous word exists but is not a known preposition
+2016,Competition (التَّكَاثُرُ),8,3,يَوۡمَئِذٍ,That Day,لَتُسۡـَٔلُنَّ,Surely you will be asked,2015,عَنِ,About,That Day,MEDIUM,Previous word exists but is not a known preposition
+2019,The Declining Day (الْعَصْرِ),1,1,وَٱلۡعَصۡرِ,By the time,,,,,,Time,LOW,No previous word in verse
+2030,The Declining Day (الْعَصْرِ),3,7,بِٱلۡحَقِّ,To the truth,وَتَوَاصَوۡاْ,And enjoin,2029,وَتَوَاصَوۡاْ,And enjoin,Truth,MEDIUM,Previous word exists but is not a known preposition
+2032,The Declining Day (الْعَصْرِ),3,9,بِٱلصَّبۡرِ,To [the] patience,وَتَوَاصَوۡاْ,And enjoin,2031,,,[the] patience,MEDIUM,Previous word exists but is not a known preposition
+2034,The Traducer (الْهُمَزَةُ),1,2,لِّكُلِّ,To every,وَيۡلٞ,Woe,2033,هُمَزَةٖ,Slanderer,Every,MEDIUM,Previous word exists but is not a known preposition
+2061,The Traducer (الْهُمَزَةُ),8,2,عَلَيۡهِم,Upon them,إِنَّهَا,"Indeed, it",2060,مُّؤۡصَدَةٞ,Closed over,Upon them,MEDIUM,Previous word exists but is not a known preposition
+2071,The Elephant (الْفِيلِ),1,6,بِأَصۡحَٰبِ,With  Companions,رَبُّكَ,Your Lord,2070,ٱلۡفِيلِ,Elephant,Companions,MEDIUM,Previous word exists but is not a known preposition
+2083,The Elephant (الْفِيلِ),4,2,بِحِجَارَةٖ,With stones,تَرۡمِيهِم,Striking them,2082,مِّن,Of,Stones,MEDIUM,Previous word exists but is not a known preposition
+2089,Quraysh (قُرَيْشٍ),1,1,لِإِيلَٰفِ,For  familiarity,,,,قُرَيۡشٍ,Quraish,Familiarity,LOW,No previous word in verse
+2120,The Small Kindnesses (الْمَاعُونَ),4,2,لِّلۡمُصَلِّينَ,To those who pray,فَوَيۡلٞ,So woe,2119,,,Those who pray,MEDIUM,Previous word exists but is not a known preposition
+2135,The Abundance (الْكَوْثَرُ),2,2,لِرَبِّكَ,To your Lord,فَصَلِّ,So pray,2134,وَٱنۡحَرۡ,And sacrifice,Your Lord,MEDIUM,Previous word exists but is not a known preposition
+2163,The Disbelievers (الْكَافِرُونَ),6,1,لَكُمۡ,For you,,,,دِينُكُمۡ,Your religion,You,LOW,No previous word in verse
+2165,The Disbelievers (الْكَافِرُونَ),6,3,وَلِيَ,And for me,دِينُكُمۡ,Your religion,2164,دِينِ,My religion,And for me,MEDIUM,Previous word exists but is not a known preposition
+2180,The Help (النَّصْرُ),3,2,بِحَمۡدِ,With  praises,فَسَبِّحۡ,Then glorify,2179,رَبِّكَ,Your Lord,Praises,MEDIUM,Previous word exists but is not a known preposition
+2221,The Sincerity (الْإِخْلَاصُ),4,3,لَّهُۥ,For Him,يَكُن,Is,2220,كُفُوًا,Equivalent,Him,MEDIUM,Previous word exists but is not a known preposition
+2226,The Daybreak (الْفَلَقِ),1,3,بِرَبِّ,In  Lord,أَعُوذُ,I seek refuge,2225,ٱلۡفَلَقِ,The dawn,Lord,MEDIUM,Previous word exists but is not a known preposition
+2249,The Mankind (النَّاسِ),1,3,بِرَبِّ,In  Lord,أَعُوذُ,I seek refuge,2248,ٱلنَّاسِ,Mankind,Lord,MEDIUM,Previous word exists but is not a known preposition
+2819,The Tidings (النَّبَأ),14,3,ٱلۡمُعۡصِرَٰتِ,the rain clouds,مِنَ,from,2818,مَآءٗ,water,The rain clouds,HIGH,"Previous word ""مِنَ"" is a known Arabic preposition (from)"
+2822,The Tidings (النَّبَأ),15,1,لِّنُخۡرِجَ,That We may bring forth,,,,بِهِۦ,thereby,That We may bring forth,LOW,No previous word in verse
+2834,The Tidings (النَّبَأ),18,2,يُنفَخُ,(in which) shall be blown,يَوۡمَ,(The) Day,2833,فِي,in,(in which) shall be blown,MEDIUM,Previous word exists but is not a known preposition
+2850,The Tidings (النَّبَأ),21,4,مِرۡصَادٗا,lying in wait,كَانَتۡ,is,2849,,,Lying in wait,MEDIUM,Previous word exists but is not a known preposition
+2851,The Tidings (النَّبَأ),22,1,لِّلطَّـٰغِينَ,For the transgressors,,,,مَـَٔابٗا,a place of return,Transgressors,LOW,No previous word in verse
+2885,The Tidings (النَّبَأ),31,2,لِلۡمُتَّقِينَ,for the righteous,إِنَّ,Indeed,2884,مَفَازًا,(is) success,Righteous,MEDIUM,Previous word exists but is not a known preposition
+2896,The Tidings (النَّبَأ),35,4,لَغۡوٗا,any vain talk,فِيهَا,therein,2895,وَلَا,and not,Any vain talk,MEDIUM,Previous word exists but is not a known preposition
+2912,The Tidings (النَّبَأ),37,9,مِنۡهُ,from Him,يَمۡلِكُونَ,they have power,2911,خِطَابٗا,(to) address,Him,MEDIUM,Previous word exists but is not a known preposition
+2927,The Tidings (النَّبَأ),38,14,صَوَابٗا,(what is) correct,وَقَالَ,and he (will) say,2926,,,(what is) correct,MEDIUM,Previous word exists but is not a known preposition
+2952,Those who drag forth (النَّازِعَات),1,1,وَٱلنَّـٰزِعَٰتِ,By those who extract,,,,غَرۡقٗا,violently,Those who extract,LOW,No previous word in verse
+2968,Those who drag forth (النَّازِعَات),8,2,يَوۡمَئِذٖ,that Day,قُلُوبٞ,Hearts,2967,وَاجِفَةٌ,will palpitate,That Day,MEDIUM,Previous word exists but is not a known preposition
+2994,Those who drag forth (النَّازِعَات),15,2,أَتَىٰكَ,(there) come to you,هَلۡ,Has,2993,حَدِيثُ,(the) story,(there) come to you,MEDIUM,Previous word exists but is not a known preposition
+3000,Those who drag forth (النَّازِعَات),16,4,بِٱلۡوَادِ,in the valley,رَبُّهُۥ,his Lord,2999,ٱلۡمُقَدَّسِ,the sacred,Valley,MEDIUM,Previous word exists but is not a known preposition
+3041,Those who drag forth (النَّازِعَات),26,5,لِّمَن,for whoever,لَعِبۡرَةٗ,surely (is) a lesson,3040,يَخۡشَىٰٓ,fears,Whoever,MEDIUM,Previous word exists but is not a known preposition
+3061,Those who drag forth (النَّازِعَات),31,2,مِنۡهَا,from it,أَخۡرَجَ,He brought forth,3060,مَآءَهَا,its water,It,MEDIUM,Previous word exists but is not a known preposition
+3067,Those who drag forth (النَّازِعَات),33,2,لَّكُمۡ,for you,مَتَٰعٗا,(As) a provision,3066,وَلِأَنۡعَٰمِكُمۡ,and for your cattle,You,MEDIUM,Previous word exists but is not a known preposition
+3068,Those who drag forth (النَّازِعَات),33,3,وَلِأَنۡعَٰمِكُمۡ,and for your cattle,لَّكُمۡ,for you,3067,,,And for your cattle,MEDIUM,Previous word exists but is not a known preposition
+3080,Those who drag forth (النَّازِعَات),36,3,لِمَن,to (him) who,ٱلۡجَحِيمُ,the Hellfire,3079,يَرَىٰ,sees,(him) who,MEDIUM,Previous word exists but is not a known preposition
+3100,Those who drag forth (النَّازِعَات),40,9,ٱلۡهَوَىٰ,the vain desires,عَنِ,from,3099,,,The vain desires,MEDIUM,Previous word exists but is not a known preposition
+3110,Those who drag forth (النَّازِعَات),43,1,فِيمَ,In what,,,,أَنتَ,(are) you,What,LOW,No previous word in verse
+3113,Those who drag forth (النَّازِعَات),43,4,ذِكۡرَىٰهَآ,(to) mention it,مِن,[of],3112,,,(to) mention it,HIGH,"Previous word ""مِن"" is a known Arabic preposition (from)"
+3120,Those who drag forth (النَّازِعَات),45,4,مَن,(for him) who,مُنذِرُ,(are) a warner,3119,يَخۡشَىٰهَا,fears it,(for him) who,MEDIUM,Previous word exists but is not a known preposition
+3134,He Frowned (عَبَسَ),2,2,جَآءَهُ,came to him,أَن,Because,3133,ٱلۡأَعۡمَىٰ,the blind man,Came to him,MEDIUM,Previous word exists but is not a known preposition
+3138,He Frowned (عَبَسَ),3,3,لَعَلَّهُۥ,that he might,يُدۡرِيكَ,would make you know,3137,يَزَّكَّىٰٓ,purify himself,That he might,MEDIUM,Previous word exists but is not a known preposition
+3146,He Frowned (عَبَسَ),5,3,ٱسۡتَغۡنَىٰ,considers himself free from need,مَنِ,(him) who,3145,,,Considers himself free from need,MEDIUM,Previous word exists but is not a known preposition
+3148,He Frowned (عَبَسَ),6,2,لَهُۥ,to him,فَأَنتَ,So you,3147,تَصَدَّىٰ,give attention,Him,MEDIUM,Previous word exists but is not a known preposition
+3151,He Frowned (عَبَسَ),7,2,عَلَيۡكَ,upon you,وَمَا,And not,3150,أَلَّا,that not,Upon you,MEDIUM,Previous word exists but is not a known preposition
+3152,He Frowned (عَبَسَ),7,3,أَلَّا,that not,عَلَيۡكَ,upon you,3151,يَزَّكَّىٰ,he purifies himself,That not,MEDIUM,Previous word exists but is not a known preposition
+3156,He Frowned (عَبَسَ),8,3,جَآءَكَ,came to you,مَن,(he) who,3155,يَسۡعَىٰ,striving,Came to you,MEDIUM,Previous word exists but is not a known preposition
+3161,He Frowned (عَبَسَ),10,2,عَنۡهُ,from him,فَأَنتَ,But you,3160,تَلَهَّىٰ,(are) distracted,Him,MEDIUM,Previous word exists but is not a known preposition
+3174,He Frowned (عَبَسَ),15,1,بِأَيۡدِي,In (the) hands,,,,سَفَرَةٖ,(of) scribes,(the) hands,LOW,No previous word in verse
+3192,He Frowned (عَبَسَ),20,3,يَسَّرَهُۥ,He made easy for him,ٱلسَّبِيلَ,the way,3191,,,He made easy for him,MEDIUM,Previous word exists but is not a known preposition
+3194,He Frowned (عَبَسَ),21,2,أَمَاتَهُۥ,He causes him to die,ثُمَّ,Then,3193,فَأَقۡبَرَهُۥ,and provides a grave for him,He causes him to die,MEDIUM,Previous word exists but is not a known preposition
+3195,He Frowned (عَبَسَ),21,3,فَأَقۡبَرَهُۥ,and provides a grave for him,أَمَاتَهُۥ,He causes him to die,3194,,,And provides a grave for him,MEDIUM,Previous word exists but is not a known preposition
+3209,He Frowned (عَبَسَ),25,1,أَنَّا,That [We],,,,صَبَبۡنَا,[We] poured,That [We],LOW,No previous word in verse
+3217,He Frowned (عَبَسَ),27,1,فَأَنۢبَتۡنَا,Then We caused to grow,,,,فِيهَا,therein,Then We caused to grow,LOW,No previous word in verse
+3229,He Frowned (عَبَسَ),32,2,لَّكُمۡ,for you,مَّتَٰعٗا,(As) a provision,3228,وَلِأَنۡعَٰمِكُمۡ,and for your cattle,You,MEDIUM,Previous word exists but is not a known preposition
+3230,He Frowned (عَبَسَ),32,3,وَلِأَنۡعَٰمِكُمۡ,and for your cattle,لَّكُمۡ,for you,3229,,,And for your cattle,MEDIUM,Previous word exists but is not a known preposition
+3243,He Frowned (عَبَسَ),37,1,لِكُلِّ,For every,,,,ٱمۡرِيٕٖ,man,Every,LOW,No previous word in verse
+3246,He Frowned (عَبَسَ),37,4,يَوۡمَئِذٖ,that Day,مِّنۡهُمۡ,among them,3245,شَأۡنٞ,(will be) a matter,That Day,MEDIUM,Previous word exists but is not a known preposition
+3250,He Frowned (عَبَسَ),38,2,يَوۡمَئِذٖ,that Day,وُجُوهٞ,Faces,3249,مُّسۡفِرَةٞ,(will be) bright,That Day,MEDIUM,Previous word exists but is not a known preposition
+3253,He Frowned (عَبَسَ),39,2,مُّسۡتَبۡشِرَةٞ,rejoicing at good news,ضَاحِكَةٞ,Laughing,3252,,,Rejoicing at good news,MEDIUM,Previous word exists but is not a known preposition
+3255,He Frowned (عَبَسَ),40,2,يَوۡمَئِذٍ,that Day,وَوُجُوهٞ,And faces,3254,عَلَيۡهَا,upon them,That Day,MEDIUM,Previous word exists but is not a known preposition
+3256,He Frowned (عَبَسَ),40,3,عَلَيۡهَا,upon them,يَوۡمَئِذٍ,that Day,3255,غَبَرَةٞ,(will be) dust,Upon them,MEDIUM,Previous word exists but is not a known preposition
+3281,The Overthrowing (التَّكْوِير),6,3,سُجِّرَتۡ,are made to overflow,ٱلۡبِحَارُ,the seas,3280,,,Are made to overflow,MEDIUM,Previous word exists but is not a known preposition
+3288,The Overthrowing (التَّكْوِير),9,1,بِأَيِّ,For what,,,,ذَنۢبٖ,sin,What,LOW,No previous word in verse
+3309,The Overthrowing (التَّكْوِير),15,3,بِٱلۡخُنَّسِ,by the retreating planets,أُقۡسِمُ,I swear,3308,,,Retreating planets,MEDIUM,Previous word exists but is not a known preposition
+3310,The Overthrowing (التَّكْوِير),16,1,ٱلۡجَوَارِ,Those that run,,,,ٱلۡكُنَّسِ,(and) disappear,Those that run,LOW,No previous word in verse
+3328,The Overthrowing (التَّكْوِير),21,1,مُّطَاعٖ,One to be obeyed,,,,ثَمَّ,and,One to be obeyed,LOW,No previous word in verse
+3336,The Overthrowing (التَّكْوِير),23,3,بِٱلۡأُفُقِ,in the horizon,رَءَاهُ,he saw him,3335,ٱلۡمُبِينِ,the clear,Horizon,MEDIUM,Previous word exists but is not a known preposition
+3354,The Overthrowing (التَّكْوِير),27,5,لِّلۡعَٰلَمِينَ,to the worlds,ذِكۡرٞ,a reminder,3353,,,Worlds,MEDIUM,Previous word exists but is not a known preposition
+3355,The Overthrowing (التَّكْوِير),28,1,لِمَن,For whoever,,,,شَآءَ,wills,Whoever,LOW,No previous word in verse
+3376,The Cleaving (الانفطار),3,3,فُجِّرَتۡ,are made to gush forth,ٱلۡبِحَارُ,the seas,3375,,,Are made to gush forth,MEDIUM,Previous word exists but is not a known preposition
+3422,The Cleaving (الانفطار),15,2,يَوۡمَ,(on the) Day,يَصۡلَوۡنَهَا,They will burn (in) it,3421,ٱلدِّينِ,(of) the Judgment,(on the) Day,MEDIUM,Previous word exists but is not a known preposition
+3426,The Cleaving (الانفطار),16,3,عَنۡهَا,from it,هُمۡ,they,3425,بِغَآئِبِينَ,(will be) absent,It,MEDIUM,Previous word exists but is not a known preposition
+3443,The Cleaving (الانفطار),19,5,لِّنَفۡسٖ,for a soul,نَفۡسٞ,a soul,3442,شَيۡـٔٗاۖ,anything,A soul,MEDIUM,Previous word exists but is not a known preposition
+3446,The Cleaving (الانفطار),19,8,يَوۡمَئِذٖ,that Day,وَٱلۡأَمۡرُ,and the Command,3445,لِّلَّهِ,(will be) with Allah,That Day,MEDIUM,Previous word exists but is not a known preposition
+3447,The Cleaving (الانفطار),19,9,لِّلَّهِ,(will be) with Allah,يَوۡمَئِذٖ,that Day,3446,,,(will be) with Allah,MEDIUM,Previous word exists but is not a known preposition
+3449,The Defrauding (المطففين),1,2,لِّلۡمُطَفِّفِينَ,to those who give less,وَيۡلٞ,Woe,3448,,,Those who give less,MEDIUM,Previous word exists but is not a known preposition
+3455,The Defrauding (المطففين),2,6,يَسۡتَوۡفُونَ,they take in full,ٱلنَّاسِ,the people,3454,,,They take in full,MEDIUM,Previous word exists but is not a known preposition
+3457,The Defrauding (المطففين),3,2,كَالُوهُمۡ,they give by measure (to) them,وَإِذَا,But when,3456,أَو,or,They give by measure (to) them,MEDIUM,Previous word exists but is not a known preposition
+3464,The Defrauding (المطففين),4,4,أَنَّهُم,that they,أُوْلَـٰٓئِكَ,those,3463,مَّبۡعُوثُونَ,(will be) resurrected,That they,MEDIUM,Previous word exists but is not a known preposition
+3466,The Defrauding (المطففين),5,1,لِيَوۡمٍ,For a Day,,,,عَظِيمٖ,Great,A Day,LOW,No previous word in verse
+3486,The Defrauding (المطففين),10,2,يَوۡمَئِذٖ,that Day,وَيۡلٞ,Woe,3485,لِّلۡمُكَذِّبِينَ,to the deniers,That Day,MEDIUM,Previous word exists but is not a known preposition
+3487,The Defrauding (المطففين),10,3,لِّلۡمُكَذِّبِينَ,to the deniers,يَوۡمَئِذٖ,that Day,3486,,,Deniers,MEDIUM,Previous word exists but is not a known preposition
+3501,The Defrauding (المطففين),13,3,عَلَيۡهِ,to him,تُتۡلَىٰ,are recited,3500,ءَايَٰتُنَا,Our Verses,Him,MEDIUM,Previous word exists but is not a known preposition
+3508,The Defrauding (المطففين),14,3,رَانَ,(the) stain has covered,بَلۡۜ,But,3507,عَلَىٰ,[over],(the) stain has covered,MEDIUM,Previous word exists but is not a known preposition
+3518,The Defrauding (المطففين),15,5,يَوۡمَئِذٖ,that Day,رَّبِّهِمۡ,their Lord,3517,لَّمَحۡجُوبُونَ,surely will be partitioned,That Day,MEDIUM,Previous word exists but is not a known preposition
+3557,The Defrauding (المطففين),25,1,يُسۡقَوۡنَ,They will be given to drink,,,,مِن,of,They will be given to drink,LOW,No previous word in verse
+3572,The Defrauding (المطففين),28,3,بِهَا,from it,يَشۡرَبُ,will drink,3571,ٱلۡمُقَرَّبُونَ,those brought near,It,MEDIUM,Previous word exists but is not a known preposition
+3584,The Defrauding (المطففين),30,3,بِهِمۡ,by them,مَرُّواْ,they passed,3583,يَتَغَامَزُونَ,they winked at one another,M,MEDIUM,Previous word exists but is not a known preposition
+3585,The Defrauding (المطففين),30,4,يَتَغَامَزُونَ,they winked at one another,بِهِمۡ,by them,3584,,,They winked at one another,MEDIUM,Previous word exists but is not a known preposition
+3621,The Splitting Open (الانشقاق),2,2,لِرَبِّهَا,to its Lord,وَأَذِنَتۡ,And has listened,3620,وَحُقَّتۡ,and was obligated,Its Lord,MEDIUM,Previous word exists but is not a known preposition
+3628,The Splitting Open (الانشقاق),4,3,فِيهَا,(is) in it,مَا,what,3627,وَتَخَلَّتۡ,and becomes empty,(is) in it,MEDIUM,Previous word exists but is not a known preposition
+3631,The Splitting Open (الانشقاق),5,2,لِرَبِّهَا,to its Lord,وَأَذِنَتۡ,And has listened,3630,وَحُقَّتۡ,and was obligated,Its Lord,MEDIUM,Previous word exists but is not a known preposition
+3645,The Splitting Open (الانشقاق),7,5,بِيَمِينِهِۦ,in his right (hand),كِتَٰبَهُۥ,his record,3644,,,His right (hand),MEDIUM,Previous word exists but is not a known preposition
+3683,The Splitting Open (الانشقاق),16,3,بِٱلشَّفَقِ,by the twilight glow,أُقۡسِمُ,I swear,3682,,,Twilight glow,MEDIUM,Previous word exists but is not a known preposition
+3695,The Splitting Open (الانشقاق),20,2,لَهُمۡ,(is) for them,فَمَا,So what,3694,لَا,not,(is) for them,MEDIUM,Previous word exists but is not a known preposition
+3700,The Splitting Open (الانشقاق),21,3,عَلَيۡهِمُ,to them,قُرِئَ,is recited,3699,ٱلۡقُرۡءَانُ,the Quran,M,MEDIUM,Previous word exists but is not a known preposition
+3711,The Splitting Open (الانشقاق),23,4,يُوعُونَ,they keep within themselves,بِمَا,of what,3710,,,They keep within themselves,MEDIUM,Previous word exists but is not a known preposition
+3720,The Splitting Open (الانشقاق),25,6,لَهُمۡ,For them,ٱلصَّـٰلِحَٰتِ,righteous deeds,3719,أَجۡرٌ,(is) a reward,M,MEDIUM,Previous word exists but is not a known preposition
+3724,The Constellations (البروج),1,1,وَٱلسَّمَآءِ,By the sky,,,,ذَاتِ,containing,Sky,LOW,No previous word in verse
+3730,The Constellations (البروج),3,2,وَمَشۡهُودٖ,and what is witnessed,وَشَاهِدٖ,And (the) witness,3729,,,And what is witnessed,MEDIUM,Previous word exists but is not a known preposition
+3739,The Constellations (البروج),6,3,عَلَيۡهَا,by it,هُمۡ,they,3738,قُعُودٞ,(were) sitting,It,MEDIUM,Previous word exists but is not a known preposition
+3745,The Constellations (البروج),7,5,بِٱلۡمُؤۡمِنِينَ,to the believers,يَفۡعَلُونَ,they were doing,3744,شُهُودٞ,witnesses,Believers,MEDIUM,Previous word exists but is not a known preposition
+3753,The Constellations (البروج),8,7,بِٱللَّهِ,in Allah,يُؤۡمِنُواْ,they believed,3752,ٱلۡعَزِيزِ,the All-Mighty,Allah,MEDIUM,Previous word exists but is not a known preposition
+3757,The Constellations (البروج),9,2,لَهُۥ,for Him,ٱلَّذِي,The One Who,3756,مُلۡكُ,(is) the dominion,Him,MEDIUM,Previous word exists but is not a known preposition
+3774,The Constellations (البروج),10,9,فَلَهُمۡ,then for them,يَتُوبُواْ,they repented,3773,عَذَابُ,(is the) punishment,Then for them,MEDIUM,Previous word exists but is not a known preposition
+3777,The Constellations (البروج),10,12,وَلَهُمۡ,and for them,جَهَنَّمَ,(of) Hell,3776,عَذَابُ,(is the) punishment,And for them,MEDIUM,Previous word exists but is not a known preposition
+3785,The Constellations (البروج),11,6,لَهُمۡ,for them,ٱلصَّـٰلِحَٰتِ,the righteous deeds,3784,جَنَّـٰتٞ,(will be) Gardens,M,MEDIUM,Previous word exists but is not a known preposition
+3812,The Constellations (البروج),17,2,أَتَىٰكَ,come to you,هَلۡ,Has,3811,حَدِيثُ,(the) story,Come to you,MEDIUM,Previous word exists but is not a known preposition
+3833,The Nightcomer (الطارق),1,1,وَٱلسَّمَآءِ,By the sky,,,,وَٱلطَّارِقِ,and the night comer,Sky,LOW,No previous word in verse
+3849,The Nightcomer (الطارق),5,3,مِمَّ,from what,ٱلۡإِنسَٰنُ,man,3848,خُلِقَ,he is created,What,MEDIUM,Previous word exists but is not a known preposition
+3868,The Nightcomer (الطارق),10,2,لَهُۥ,(is) for him,فَمَا,Then not,3867,مِن,any,(is) for him,MEDIUM,Previous word exists but is not a known preposition
+3873,The Nightcomer (الطارق),11,1,وَٱلسَّمَآءِ,By the sky,,,,ذَاتِ,which,Sky,LOW,No previous word in verse
+3884,The Nightcomer (الطارق),14,3,بِٱلۡهَزۡلِ,(is) for amusement,هُوَ,it,3883,,,(is) for amusement,MEDIUM,Previous word exists but is not a known preposition
+3892,The Nightcomer (الطارق),17,3,أَمۡهِلۡهُمۡ,Give respite to them ,ٱلۡكَٰفِرِينَ,(to) the disbelievers,3891,رُوَيۡدَۢا,little,Give respite to them,MEDIUM,Previous word exists but is not a known preposition
+3923,The Most High (الأعلى),8,2,لِلۡيُسۡرَىٰ,to the ease,وَنُيَسِّرُكَ,And We will ease you,3922,,,Ease,MEDIUM,Previous word exists but is not a known preposition
+3967,The Overwhelming (الغاشية),1,2,أَتَىٰكَ,(there) come to you,هَلۡ,Has,3966,حَدِيثُ,(the) news,(there) come to you,MEDIUM,Previous word exists but is not a known preposition
+3971,The Overwhelming (الغاشية),2,2,يَوۡمَئِذٍ,that Day,وُجُوهٞ,Faces,3970,خَٰشِعَةٌ,(will be) humbled,That Day,MEDIUM,Previous word exists but is not a known preposition
+3978,The Overwhelming (الغاشية),5,1,تُسۡقَىٰ,They will be given to drink,,,,مِنۡ,from,They will be given to drink,LOW,No previous word in verse
+3983,The Overwhelming (الغاشية),6,2,لَهُمۡ,for them,لَّيۡسَ,Not is,3982,طَعَامٌ,food,M,MEDIUM,Previous word exists but is not a known preposition
+3995,The Overwhelming (الغاشية),8,2,يَوۡمَئِذٖ,that Day,وُجُوهٞ,Faces,3994,نَّاعِمَةٞ,(will be) joyful,That Day,MEDIUM,Previous word exists but is not a known preposition
+3997,The Overwhelming (الغاشية),9,1,لِّسَعۡيِهَا,With their effort,,,,رَاضِيَةٞ,satisfied,Ir effort,LOW,No previous word in verse
+4005,The Overwhelming (الغاشية),11,4,لَٰغِيَةٗ,vain talk,فِيهَا,therein,4004,,,Vain talk,MEDIUM,Previous word exists but is not a known preposition
+4013,The Overwhelming (الغاشية),14,2,مَّوۡضُوعَةٞ,put in place,وَأَكۡوَابٞ,And cups,4012,,,Put in place,MEDIUM,Previous word exists but is not a known preposition
+4052,The Overwhelming (الغاشية),25,2,إِلَيۡنَآ,to Us,إِنَّ,Indeed,4051,إِيَابَهُمۡ,(will be) their return,Us,MEDIUM,Previous word exists but is not a known preposition
+4056,The Overwhelming (الغاشية),26,3,عَلَيۡنَا,upon Us,إِنَّ,indeed,4055,حِسَابَهُم,(is) their account,Upon Us,MEDIUM,Previous word exists but is not a known preposition
+4058,The Dawn (الفجر),1,1,وَٱلۡفَجۡرِ,By the dawn,,,,,,Dawn,LOW,No previous word in verse
+4070,The Dawn (الفجر),5,5,لِّذِي,for those,قَسَمٞ,(not) an oath,4069,حِجۡرٍ,who understand,Those,MEDIUM,Previous word exists but is not a known preposition
+4077,The Dawn (الفجر),6,6,بِعَادٍ,with Aad,رَبُّكَ,your Lord,4076,,,Aad,MEDIUM,Previous word exists but is not a known preposition
+4091,The Dawn (الفجر),9,5,بِٱلۡوَادِ,in the valley,ٱلصَّخۡرَ,the rocks,4090,,,Valley,MEDIUM,Previous word exists but is not a known preposition
+4103,The Dawn (الفجر),13,2,عَلَيۡهِمۡ,on them,فَصَبَّ,So poured,4102,رَبُّكَ,your Lord,M,MEDIUM,Previous word exists but is not a known preposition
+4116,The Dawn (الفجر),15,7,فَأَكۡرَمَهُۥ,and is generous to him,رَبُّهُۥ,his Lord,4115,وَنَعَّمَهُۥ,and favors him,And is generous to him,MEDIUM,Previous word exists but is not a known preposition
+4126,The Dawn (الفجر),16,6,عَلَيۡهِ,for him,فَقَدَرَ,and restricts,4125,رِزۡقَهُۥ,his provision,Him,MEDIUM,Previous word exists but is not a known preposition
+4161,The Dawn (الفجر),23,2,يَوۡمَئِذِۭ,that Day,وَجِاْيٓءَ,And is brought,4160,بِجَهَنَّمَۚ,Hell,That Day,MEDIUM,Previous word exists but is not a known preposition
+4163,The Dawn (الفجر),23,4,يَوۡمَئِذٖ,That Day,بِجَهَنَّمَۚ,Hell,4162,يَتَذَكَّرُ,will remember,That Day,MEDIUM,Previous word exists but is not a known preposition
+4167,The Dawn (الفجر),23,8,لَهُ,(will be) for him,وَأَنَّىٰ,but how,4166,ٱلذِّكۡرَىٰ,the remembrance,(will be) for him,MEDIUM,Previous word exists but is not a known preposition
+4172,The Dawn (الفجر),24,4,لِحَيَاتِي,for my life,قَدَّمۡتُ,I had sent forth,4171,,,My life,MEDIUM,Previous word exists but is not a known preposition
+4173,The Dawn (الفجر),25,1,فَيَوۡمَئِذٖ,So that Day,,,,لَّا,not,So that Day,LOW,No previous word in verse
+4197,The City (البلد),1,3,بِهَٰذَا,by this,أُقۡسِمُ,I swear,4196,ٱلۡبَلَدِ,city,This,MEDIUM,Previous word exists but is not a known preposition
+4200,The City (البلد),2,2,حِلُّۢ,(are) free (to dwell),وَأَنتَ,And you,4199,بِهَٰذَا,in this,(are) free (to dwell),MEDIUM,Previous word exists but is not a known preposition
+4201,The City (البلد),2,3,بِهَٰذَا,in this,حِلُّۢ,(are) free (to dwell),4200,ٱلۡبَلَدِ,city,This,MEDIUM,Previous word exists but is not a known preposition
+4209,The City (البلد),4,4,فِي,(to be) in,ٱلۡإِنسَٰنَ,man,4208,كَبَدٍ,hardship,(to be) in,MEDIUM,Previous word exists but is not a known preposition
+4228,The City (البلد),8,3,لَّهُۥ,for him,نَجۡعَل,We made,4227,عَيۡنَيۡنِ,two eyes,Him,MEDIUM,Previous word exists but is not a known preposition
+4261,The City (البلد),17,6,وَتَوَاصَوۡاْ,and enjoin (each other),ءَامَنُواْ,believe,4260,بِٱلصَّبۡرِ,to patience,And enjoin (each other),MEDIUM,Previous word exists but is not a known preposition
+4262,The City (البلد),17,7,بِٱلصَّبۡرِ,to patience,وَتَوَاصَوۡاْ,and enjoin (each other),4261,وَتَوَاصَوۡاْ,and enjoin (each other),Patience,MEDIUM,Previous word exists but is not a known preposition
+4263,The City (البلد),17,8,وَتَوَاصَوۡاْ,and enjoin (each other),بِٱلصَّبۡرِ,to patience,4262,بِٱلۡمَرۡحَمَةِ,to compassion,And enjoin (each other),MEDIUM,Previous word exists but is not a known preposition
+4264,The City (البلد),17,9,بِٱلۡمَرۡحَمَةِ,to compassion,وَتَوَاصَوۡاْ,and enjoin (each other),4263,,,Compassion,MEDIUM,Previous word exists but is not a known preposition
+4270,The City (البلد),19,3,بِـَٔايَٰتِنَا,in Our Verses,كَفَرُواْ,disbelieve,4269,هُمۡ,they,Our Verses,MEDIUM,Previous word exists but is not a known preposition
+4277,The Sun (الشمس),1,1,وَٱلشَّمۡسِ,By the sun,,,,وَضُحَىٰهَا,and its brightness,Sun,LOW,No previous word in verse
+4292,The Sun (الشمس),6,2,وَمَا,and by (He) Who,وَٱلۡأَرۡضِ,And the earth,4291,طَحَىٰهَا,spread it,And by (He) Who,MEDIUM,Previous word exists but is not a known preposition
+4298,The Sun (الشمس),8,2,فُجُورَهَا,(to distinguish) its wickedness,فَأَلۡهَمَهَا,And He inspired it,4297,وَتَقۡوَىٰهَا,and its righteousness,(to distinguish) its wickedness,MEDIUM,Previous word exists but is not a known preposition
+4310,The Sun (الشمس),11,3,بِطَغۡوَىٰهَآ,by their transgression,ثَمُودُ,Thamud,4309,,,Ir transgression,MEDIUM,Previous word exists but is not a known preposition
+4315,The Sun (الشمس),13,2,لَهُمۡ,to them,فَقَالَ,But said,4314,رَسُولُ,(the) Messenger,M,MEDIUM,Previous word exists but is not a known preposition
+4326,The Sun (الشمس),14,6,بِذَنۢبِهِمۡ,for their sin,رَبُّهُم,their Lord,4325,فَسَوَّىٰهَا,and leveled them,Ir sin,MEDIUM,Previous word exists but is not a known preposition
+4331,The Night (الليل),1,1,وَٱلَّيۡلِ,By the night,,,,إِذَا,when,Night,LOW,No previous word in verse
+4336,The Night (الليل),2,3,تَجَلَّىٰ,it shines in brightness,إِذَا,when,4335,,,It shines in brightness,MEDIUM,Previous word exists but is not a known preposition
+4349,The Night (الليل),6,2,بِٱلۡحُسۡنَىٰ,in the best,وَصَدَّقَ,And believes,4348,,,Best,MEDIUM,Previous word exists but is not a known preposition
+4355,The Night (الليل),8,4,وَٱسۡتَغۡنَىٰ,and considers himself free from need,بَخِلَ,withholds,4354,,,And considers himself free from need,MEDIUM,Previous word exists but is not a known preposition
+4367,The Night (الليل),12,2,عَلَيۡنَا,upon Us,إِنَّ,Indeed,4366,لَلۡهُدَىٰ,(is) the guidance,Upon Us,MEDIUM,Previous word exists but is not a known preposition
+4370,The Night (الليل),13,2,لَنَا,for Us,وَإِنَّ,And indeed,4369,لَلۡأٓخِرَةَ,(is) the Hereafter,Us,MEDIUM,Previous word exists but is not a known preposition
+4383,The Night (الليل),17,1,وَسَيُجَنَّبُهَا,But will be removed from it,,,,ٱلۡأَتۡقَى,the righteous,But will be removed from it,LOW,No previous word in verse
+4390,The Night (الليل),19,2,لِأَحَدٍ,for anyone,وَمَا,And not,4389,عِندَهُۥ,with him,Anyone,MEDIUM,Previous word exists but is not a known preposition
+4391,The Night (الليل),19,3,عِندَهُۥ,with him,لِأَحَدٍ,for anyone,4390,مِن,any,Him,MEDIUM,Previous word exists but is not a known preposition
+4394,The Night (الليل),19,6,تُجۡزَىٰٓ,to be recompensed,نِّعۡمَةٖ,favor,4393,,,Be recompensed,MEDIUM,Previous word exists but is not a known preposition
+4402,The Morning Hours (الضحى),1,1,وَٱلضُّحَىٰ,By the morning brightness,,,,,,Morning brightness,LOW,No previous word in verse
+4405,The Morning Hours (الضحى),2,3,سَجَىٰ,it covers with darkness,إِذَا,when,4404,,,It covers with darkness,MEDIUM,Previous word exists but is not a known preposition
+4413,The Morning Hours (الضحى),4,3,لَّكَ,for you,خَيۡرٞ,(is) better,4412,مِنَ,than,You,MEDIUM,Previous word exists but is not a known preposition
+4428,The Morning Hours (الضحى),8,2,عَآئِلٗا,in need,وَوَجَدَكَ,And He found you,4427,فَأَغۡنَىٰ,so He made self-sufficient,Need,MEDIUM,Previous word exists but is not a known preposition
+4444,The Relief (الشرح),1,3,لَكَ,for you,نَشۡرَحۡ,We expanded,4443,صَدۡرَكَ,your breast,You,MEDIUM,Previous word exists but is not a known preposition
+4447,The Relief (الشرح),2,2,عَنكَ,from you,وَوَضَعۡنَا,And We removed,4446,وِزۡرَكَ,your burden,You,MEDIUM,Previous word exists but is not a known preposition
+4453,The Relief (الشرح),4,2,لَكَ,for you,وَرَفَعۡنَا,And We raised high,4452,ذِكۡرَكَ,your reputation,You,MEDIUM,Previous word exists but is not a known preposition
+4469,The Fig (التين),1,1,وَٱلتِّينِ,By the fig,,,,وَٱلزَّيۡتُونِ,and the olive,Fig,LOW,No previous word in verse
+4484,The Fig (التين),5,3,أَسۡفَلَ,(to the) lowest,رَدَدۡنَٰهُ,We returned him,4483,سَٰفِلِينَ,(of the) low,(to the) lowest,MEDIUM,Previous word exists but is not a known preposition
+4491,The Fig (التين),6,6,فَلَهُمۡ,then for them,ٱلصَّـٰلِحَٰتِ,righteous deeds,4490,أَجۡرٌ,(is a) reward,Then for them,MEDIUM,Previous word exists but is not a known preposition
+4496,The Fig (التين),7,2,يُكَذِّبُكَ,causes you to deny,فَمَا,Then what,4495,بَعۡدُ,after (this),Causes you to deny,MEDIUM,Previous word exists but is not a known preposition
+4504,The Clot (العلق),1,2,بِٱسۡمِ,in (the) name,ٱقۡرَأۡ,Read,4503,رَبِّكَ,(of) your Lord,(the) name,MEDIUM,Previous word exists but is not a known preposition
+4517,The Clot (العلق),4,3,بِٱلۡقَلَمِ,by the pen,عَلَّمَ,taught,4516,,,Pen,MEDIUM,Previous word exists but is not a known preposition
+4562,The Clot (العلق),15,6,بِٱلنَّاصِيَةِ,by the forelock,لَنَسۡفَعَۢا,surely We will drag him,4561,,,Forelock,MEDIUM,Previous word exists but is not a known preposition
+4574,The Clot (العلق),19,5,وَٱقۡتَرِب۩,and draw near (to Allah),وَٱسۡجُدۡۤ,But prostrate,4573,,,And draw near (to Allah),MEDIUM,Previous word exists but is not a known preposition

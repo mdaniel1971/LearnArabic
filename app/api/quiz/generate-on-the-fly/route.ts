@@ -6,9 +6,9 @@ export async function POST(request: NextRequest) {
   try {
     const { surahId } = await request.json();
 
-    if (!process.env.GOOGLE_GEMINI_API_KEY) {
+    if (!process.env.MISTRAL_API_KEY) {
       return NextResponse.json({
-        error: 'GOOGLE_GEMINI_API_KEY is not configured. Please add it to your .env.local file.'
+        error: 'MISTRAL_API_KEY is not configured. Please add it to your .env.local file.'
       }, { status: 500 });
     }
 
@@ -39,8 +39,7 @@ export async function POST(request: NextRequest) {
   } catch (error: any) {
     console.error('Error generating quiz:', error);
     return NextResponse.json({
-      error: error.message,
-      details: error.toString()
+      error: error.message || 'Failed to generate quiz'
     }, { status: 500 });
   }
 }

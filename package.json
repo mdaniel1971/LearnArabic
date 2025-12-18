@@ -12,7 +12,9 @@
     "generate-juz-amma-sql": "tsx scripts/generate-juz-amma-sql.ts",
     "fetch-corpus-grammar": "tsx scripts/fetch-corpus-grammar.ts",
     "add-particle-types": "tsx scripts/add-particle-types.ts",
-    "fetch-voice-from-corpus": "tsx scripts/fetch-voice-from-corpus.ts"
+    "fetch-voice-from-corpus": "tsx scripts/fetch-voice-from-corpus.ts",
+    "diagnose:translations": "tsx scripts/diagnose-translation-issues.ts",
+    "fix:translations": "tsx scripts/fix-translation-issues.ts"
   },
   "dependencies": {
     "@google/generative-ai": "^0.24.1",

@@ -96,8 +96,6 @@ export default function QuizPage() {
           // Ensure options is an array
           const optionsArray = Array.isArray(q.options) && q.options.length > 0 ? q.options : [];
 
-          console.log('Question options:', q.question, optionsArray); // Debug log
-
           return {
             id: q.id || `temp-${Math.random()}`,
             surah_id: surah.id,
@@ -187,19 +185,6 @@ export default function QuizPage() {
     const arabicMatch = currentQ.question_text.match(/'([^']+)'/);
     const arabicWord = arabicMatch ? arabicMatch[1] : '';
 
-    // Debug: Log grammar data
-    console.log('Question data for feedback:', {
-      questionId,
-      grammar_point: currentQ.grammar_point,
-      word_id: currentQ.word_id,
-      arabicWord,
-      hasGrammarPoint: !!currentQ.grammar_point,
-      hasWordId: !!currentQ.word_id,
-      userAnswer: answer,
-      correctAnswer: currentQ.correct_answer,
-      isCorrect: result.isCorrect
-    });
-
     setFeedback(prev => ({
       ...prev,
       [questionId]: {
@@ -230,7 +215,6 @@ export default function QuizPage() {
     const numericWordId = typeof wordId === 'string' ? parseInt(wordId, 10) : wordId;
 
     if (!numericWordId || isNaN(numericWordId)) {
-      console.log('Missing or invalid word_id for grammar tutorial:', wordId);
       return;
     }
 
@@ -500,18 +484,6 @@ export default function QuizPage() {
   const arabicMatch = questionText.match(/'([^']+)'/);
   const arabicWord = arabicMatch ? arabicMatch[1] : '';
 
-  // Debug: Log current question to see what we have
-  if (currentQuestion === 0) {
-    console.log('First question debug:', {
-      question_text: currentQ.question_text,
-      question_type: currentQ.question_type,
-      options: currentQ.options,
-      options_type: typeof currentQ.options,
-      options_is_array: Array.isArray(currentQ.options),
-      options_length: Array.isArray(currentQ.options) ? currentQ.options.length : 'N/A',
-      full_question: currentQ
-    });
-  }
 
   return (
     <div className="min-h-screen bg-gray-50 p-4">

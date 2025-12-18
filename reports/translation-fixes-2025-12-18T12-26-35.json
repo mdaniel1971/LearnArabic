@@ -1,0 +1,25 @@
+{
+  "timestamp": "2025-12-18T12:26:38.888Z",
+  "total_approved": 2,
+  "success_count": 2,
+  "error_count": 0,
+  "fixes": [
+    {
+      "word_id": 19,
+      "current_translation": "to the path",
+      "new_translation": "Path",
+      "surah_name": "The Opening (الْفَاتِحَة)",
+      "verse_number": 6,
+      "reason": "Auto-approved: word_id in auto-approve list"
+    },
+    {
+      "word_id": 2819,
+      "current_translation": "the rain clouds",
+      "new_translation": "The rain clouds",
+      "surah_name": "The Tidings (النَّبَأ)",
+      "verse_number": 14,
+      "reason": "Auto-approved: word_id in auto-approve list"
+    }
+  ],
+  "errors": []
+}

@@ -1,6 +1,5 @@
 /**
  * Generate text content using Gemini via REST API
- * Uses official Google API format with x-goog-api-key header
  */
 export async function generateWithGemini(prompt: string, options: {
   temperature?: number;
@@ -52,13 +51,9 @@ export async function generateWithGemini(prompt: string, options: {
  * Parse JSON from Gemini with multiple fallback strategies
  */
 function parseGeminiJSON(text: string): any {
-  console.log('Raw response length:', text.length);
-  console.log('First 200 chars:', text.substring(0, 200));
-  console.log('Last 200 chars:', text.substring(text.length - 200));
-
-  // Strategy 1: Clean and parse directly
-  try {
-    let cleaned = text.trim();
+  // Helper to extract JSON array from text
+  const extractJSONArray = (input: string): string => {
+    let cleaned = input.trim();
 
     // Remove markdown code blocks
     if (cleaned.includes('```json')) {
@@ -69,107 +64,106 @@ function parseGeminiJSON(text: string): any {
       if (match) cleaned = match[1].trim();
     }
 
-    // Extract just the JSON array
+    // Extract JSON array boundaries
     const firstBracket = cleaned.indexOf('[');
     const lastBracket = cleaned.lastIndexOf(']');
-    if (firstBracket !== -1 && lastBracket !== -1) {
+    if (firstBracket !== -1 && lastBracket !== -1 && lastBracket > firstBracket) {
       cleaned = cleaned.substring(firstBracket, lastBracket + 1);
     }
 
-    const parsed = JSON.parse(cleaned);
-    console.log('✅ Strategy 1: Direct parse successful');
-    return parsed;
+    return cleaned;
+  };
+
+  // Helper to apply common fixes
+  const applyCommonFixes = (input: string): string => {
+    return input
+      .replace(/,(\s*[}\]])/g, '$1') // Remove trailing commas
+      .replace(/,(\s*\n\s*[}\]])/g, '$1') // Remove trailing commas with newlines
+      .replace(/[\u201C\u201D]/g, '"') // Fix smart quotes
+      .replace(/[\u2018\u2019]/g, "'") // Fix smart single quotes
+      .replace(/\/\/.*$/gm, '') // Remove comments
+      .replace(/\/\*[\s\S]*?\*\//g, '') // Remove block comments
+      .replace(/,{2,}/g, ',') // Fix multiple commas
+      .replace(/,\s*([}\]])/g, '$1') // Remove comma before closing brackets
+      .replace(/[\x00-\x1F\x7F]/g, ''); // Remove control characters
+  };
+
+  // Strategy 1: Direct parse after basic cleaning
+  try {
+    const cleaned = extractJSONArray(text);
+    return JSON.parse(cleaned);
   } catch (error: any) {
-    console.log('❌ Strategy 1 failed:', error.message);
+    // Continue to next strategy
   }
 
   // Strategy 2: Fix trailing commas
   try {
-    let cleaned = text.trim();
-    const firstBracket = cleaned.indexOf('[');
-    const lastBracket = cleaned.lastIndexOf(']');
-    if (firstBracket !== -1 && lastBracket !== -1) {
-      cleaned = cleaned.substring(firstBracket, lastBracket + 1);
-    }
-
-    // Remove trailing commas before } or ]
+    let cleaned = extractJSONArray(text);
     cleaned = cleaned.replace(/,(\s*[}\]])/g, '$1');
-
-    const parsed = JSON.parse(cleaned);
-    console.log('✅ Strategy 2: Fixed trailing commas');
-    return parsed;
+    return JSON.parse(cleaned);
   } catch (error: any) {
-    console.log('❌ Strategy 2 failed:', error.message);
+    // Continue to next strategy
   }
 
-  // Strategy 3: Fix common quote issues
+  // Strategy 3: Fix quotes and trailing commas
   try {
-    let cleaned = text.trim();
-    const firstBracket = cleaned.indexOf('[');
-    const lastBracket = cleaned.lastIndexOf(']');
-    if (firstBracket !== -1 && lastBracket !== -1) {
-      cleaned = cleaned.substring(firstBracket, lastBracket + 1);
-    }
-
-    // Remove trailing commas
-    cleaned = cleaned.replace(/,(\s*[}\]])/g, '$1');
-
-    // Fix smart quotes (sometimes Gemini uses these)
-    cleaned = cleaned.replace(/[\u201C\u201D]/g, '"'); // " and "
-    cleaned = cleaned.replace(/[\u2018\u2019]/g, "'"); // ' and '
-
-    const parsed = JSON.parse(cleaned);
-    console.log('✅ Strategy 3: Fixed quotes');
-    return parsed;
+    let cleaned = extractJSONArray(text);
+    cleaned = applyCommonFixes(cleaned);
+    return JSON.parse(cleaned);
   } catch (error: any) {
-    console.log('❌ Strategy 3 failed:', error.message);
-
-    // Log the error location
-    const match = error.message.match(/position (\d+)/);
-    if (match) {
-      const position = parseInt(match[1]);
-      const start = Math.max(0, position - 100);
-      const end = Math.min(text.length, position + 100);
-      console.error('Error near position', position);
-      console.error('Context:', text.substring(start, end));
-      console.error('Character at position:', text.charAt(position), '(code:', text.charCodeAt(position), ')');
-    }
+    // Continue to next strategy
   }
 
-  // Strategy 4: Try to manually fix the JSON at the error position
+  // Strategy 4: Fix string escaping issues
   try {
-    let cleaned = text.trim();
-    const firstBracket = cleaned.indexOf('[');
-    const lastBracket = cleaned.lastIndexOf(']');
-    if (firstBracket !== -1 && lastBracket !== -1) {
-      cleaned = cleaned.substring(firstBracket, lastBracket + 1);
-    }
-
-    // Remove trailing commas
-    cleaned = cleaned.replace(/,(\s*[}\]])/g, '$1');
-    // Fix smart quotes
-    cleaned = cleaned.replace(/[\u201C\u201D]/g, '"');
-    cleaned = cleaned.replace(/[\u2018\u2019]/g, "'");
-
-    // Try to find and fix the specific error
-    // Common issues: unescaped quotes in strings, missing commas, extra commas
-
+    let cleaned = extractJSONArray(text);
+    cleaned = applyCommonFixes(cleaned);
     // Fix unescaped single quotes in double-quoted strings
     cleaned = cleaned.replace(/"([^"]*)'([^"]*?)"/g, (match, before, after) => {
-      // Only if the single quote is inside a string
       return `"${before}\\'${after}"`;
     });
-
-    const parsed = JSON.parse(cleaned);
-    console.log('✅ Strategy 4: Fixed string escaping');
-    return parsed;
+    return JSON.parse(cleaned);
   } catch (error: any) {
-    console.log('❌ Strategy 4 failed:', error.message);
+    // Continue to next strategy
   }
 
-  // All strategies failed
-  console.error('All parsing strategies failed');
-  console.error('Full text:', text);
+  // Strategy 5: Aggressive fixes
+  try {
+    let cleaned = extractJSONArray(text);
+    cleaned = applyCommonFixes(cleaned);
+    // Fix unclosed strings
+    cleaned = cleaned.replace(/"([^"]*)$/gm, (match) => {
+      return match.endsWith('"') ? match : match + '"';
+    });
+    // Fix string formatting
+    cleaned = cleaned.replace(/([{,]\s*)"([^"]*)"\s*:/g, '$1"$2":');
+    cleaned = cleaned.replace(/:\s*"([^"]*)"([,}])/g, ': "$1"$2');
+    // Fix unescaped newlines in strings
+    cleaned = cleaned.replace(/"([^"]*)\n([^"]*)"/g, '"$1\\n$2"');
+    return JSON.parse(cleaned);
+  } catch (error: any) {
+    // Continue to next strategy
+  }
+
+  // Strategy 6: Try to extract valid JSON from matches
+  const jsonMatches = text.match(/\[[\s\S]{50,}\]/g);
+  if (jsonMatches && jsonMatches.length > 0) {
+    for (const match of jsonMatches.slice(0, 3)) {
+      try {
+        let cleaned = applyCommonFixes(match);
+        return JSON.parse(cleaned);
+      } catch (e) {
+        // Try next match
+      }
+    }
+  }
+
+  // All strategies failed - log error details
+  console.error('Failed to parse JSON response from Gemini');
+  console.error('Response length:', text.length);
+  console.error('First 500 chars:', text.substring(0, 500));
+  console.error('Last 500 chars:', text.substring(Math.max(0, text.length - 500)));
+
   throw new Error('Failed to parse JSON response from Gemini after trying all strategies');
 }
 
@@ -186,7 +180,7 @@ export async function generateJSONWithGemini(prompt: string, options: {
     throw new Error('GOOGLE_GEMINI_API_KEY is not set');
   }
 
-  // Enhance prompt with VERY strict JSON instructions
+  // Enhance prompt with strict JSON instructions
   const jsonPrompt = `${prompt}
 
 CRITICAL JSON FORMATTING RULES:
@@ -218,7 +212,7 @@ Your response must be parseable by JSON.parse() immediately.`;
             }]
           }],
           generationConfig: {
-            temperature: options.temperature ?? 0.3, // Even lower for consistency
+            temperature: options.temperature ?? 0.3,
             maxOutputTokens: options.maxTokens ?? 8000,
           }
         })
@@ -233,14 +227,12 @@ Your response must be parseable by JSON.parse() immediately.`;
 
     const data = await response.json();
 
-    // Check if response has candidates
     if (!data.candidates || !data.candidates[0] || !data.candidates[0].content || !data.candidates[0].content.parts) {
       console.error('Unexpected API response structure:', JSON.stringify(data, null, 2));
       throw new Error('Invalid response structure from Gemini API');
     }
 
     const text = data.candidates[0].content.parts[0].text;
-
     return parseGeminiJSON(text);
   } catch (error: any) {
     console.error('Gemini JSON API Error:', error);

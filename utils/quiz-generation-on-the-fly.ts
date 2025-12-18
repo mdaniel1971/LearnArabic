@@ -1,6 +1,6 @@
 import { SupabaseClient } from '@supabase/supabase-js';
 import { detectIdafa, detectPreposition } from '@/utils/idafa-detection';
-import { generateJSONWithGemini } from '@/lib/gemini';
+import { generateJSONWithMistral } from '@/lib/mistral';
 
 interface QuizQuestion {
   type: string;
@@ -27,10 +27,10 @@ export async function generateQuizForSurahOnTheFly(
   surahId: number
 ): Promise<QuizGenerationResult> {
   try {
-    if (!process.env.GOOGLE_GEMINI_API_KEY) {
+    if (!process.env.MISTRAL_API_KEY) {
       return {
         success: false,
-        error: 'GOOGLE_GEMINI_API_KEY is not configured'
+        error: 'MISTRAL_API_KEY is not configured'
       };
     }
 
@@ -77,9 +77,37 @@ export async function generateQuizForSurahOnTheFly(
         verse_number: v.verse_number,
         text_arabic: v.text_arabic,
         translation: verseTranslation,
-        words: verseWords
+        words: verseWords.sort((a: any, b: any) => a.word_position - b.word_position)
       };
     }) || [];
+
+    // Create phrase contexts for each word with proper translations
+    const wordContexts = wordsData.map((word: any) => {
+      // Find the verse this word belongs to
+      const verse = verseContexts.find((v: any) =>
+        v.words.some((w: any) => w.id === word.id)
+      );
+
+      if (!verse) return null;
+
+      // Get 2-3 words of context around this word
+      const wordIndex = verse.words.findIndex((w: any) => w.id === word.id);
+      const startIndex = Math.max(0, wordIndex - 1);
+      const endIndex = Math.min(verse.words.length, wordIndex + 3);
+      const contextWords = verse.words.slice(startIndex, endIndex);
+
+      const phraseArabic = contextWords.map((w: any) => w.text_arabic).join(' ');
+      const phraseTranslation = contextWords.map((w: any) => w.translation_english || '').filter((t: string) => t).join(' ');
+
+      return {
+        word_id: word.id,
+        target_word: word.text_arabic,
+        target_translation: word.translation_english,
+        phrase_arabic: phraseArabic,
+        phrase_translation: phraseTranslation,
+        grammar: word.grammar_info
+      };
+    }).filter(Boolean);
 
     const prompt = `You are generating a 10-question quiz for Surah ${surahData.name_english} (${surahData.name_arabic}) to test Quranic Arabic comprehension.
 
@@ -91,10 +119,13 @@ export async function generateQuizForSurahOnTheFly(
 
 Available Data:
 
-Words:
+Words with Individual Translations:
 ${wordsData.map((w: any) => `- word_id: ${w.id}, Arabic: ${w.text_arabic}, transliteration: ${w.transliteration || 'N/A'}, translation: ${w.translation_english || 'N/A'}${w.grammar_info ? `, grammar: ${JSON.stringify(w.grammar_info)}` : ''}`).join('\n')}
 
-Verses:
+Phrase Contexts (for Grammar Questions - USE THESE EXACT TRANSLATIONS):
+${wordContexts.map((ctx: any) => `- word_id: ${ctx.word_id}, target: ${ctx.target_word}, phrase: "${ctx.phrase_arabic}" = "${ctx.phrase_translation}"`).join('\n')}
+
+Complete Verses (for Comprehension Questions):
 ${verseContexts.map((v: any) => `- Verse ${v.verse_number}: ${v.text_arabic} (${v.translation || 'translation not available'})`).join('\n') || ''}
 
 ---
@@ -133,10 +164,13 @@ Example:
 
 GRAMMAR QUESTIONS:
 
-Format: "In the phrase 'بِسۡمِ ٱللَّهِ ٱلرَّحۡمَـٰنِ' (In the name of Allah, the Most Gracious), what is ٱللَّهِ?"
+**CRITICAL**: Use ONLY the pre-built phrase contexts provided above. Do NOT construct your own translations.
+
+Format: "In the phrase '[Arabic phrase]' ([English translation from phrase context]), what is [target word]?"
 
 Rules:
-- Start directly with "In the phrase '[Arabic phrase]' ([English translation]), [question]"
+- Find the word in "Phrase Contexts" section above
+- Use the EXACT phrase_arabic and phrase_translation provided
 - ALWAYS include English translation in parentheses after Arabic phrase
 - NO transliteration - only Arabic script and English
 - Use plain language in options
@@ -163,27 +197,31 @@ Example:
 
 COMPREHENSION QUESTIONS:
 
-Format: "In verse 16, what human tendency is criticized?"
+**CRITICAL NEW RULE**: When asking about a specific verse, ALWAYS include the Arabic text of that verse in the question so the user can see it.
+
+Format: "Verse [number] says: '[Arabic text of verse]'. What [question about meaning/message]?"
 
 CRITICAL RULE - Single Verse Precision:
 - The correct answer MUST come ONLY from the specific verse mentioned
 - Do NOT use information from adjacent verses for the correct answer
 - You MAY use adjacent verses' messages as wrong options (distractors)
+- ALWAYS display the Arabic verse text in the question
 
 Process:
 1. Analyze what THIS verse says (not the next/previous verse)
-2. Generate question explicitly mentioning verse number
-3. Create distractors from adjacent verses or related themes
+2. Include the full Arabic text of the verse in the question
+3. Generate question about the verse's meaning or message
+4. Create distractors from adjacent verses or related themes
 
 Example:
 {
   "type": "multiple_choice",
-  "question": "In verse 16, what human tendency is criticized?",
+  "question": "Verse 16 says: 'بَلۡ تُؤۡثِرُونَ ٱلۡحَيَوٰةَ ٱلدُّنۡيَا'. What human tendency is criticized in this verse?",
   "options": ["Neglecting prayer", "Prioritizing worldly pleasures over spiritual matters", "Believing the Hereafter is better", "Following misguided leaders"],
   "correct_answer": "Prioritizing worldly pleasures over spiritual matters",
   "word_id": null,
   "grammar_point": null,
-  "explanation": "Verse 16 specifically criticizes the human tendency to prefer worldly life. The next verse states the Hereafter is better, but verse 16 itself identifies this problematic preference."
+  "explanation": "Verse 16 specifically criticizes the human tendency to prefer worldly life (al-hayāt ad-dunyā). The next verse states the Hereafter is better, but verse 16 itself identifies this problematic preference."
 }
 
 ---
@@ -215,43 +253,56 @@ CRITICAL INSTRUCTIONS:
 2. Start with [ and end with ]
 3. Exactly 10 questions
 4. NO transliteration in question text
-5. Grammar questions MUST have English translation in parentheses
-6. Use plain language: "The subject" not "Subject form"
-7. word_id must be number or null, never string
-8. One option must exactly match correct_answer
+5. For Grammar questions: Use EXACT phrase translations from "Phrase Contexts" section
+6. For Comprehension questions: ALWAYS include the Arabic verse text in the question
+7. Grammar questions MUST have English translation in parentheses
+8. Use plain language: "The subject" not "Subject form"
+9. word_id must be number or null, never string
+10. One option must exactly match correct_answer
 
 Remember: Return ONLY the JSON array. No other text.`;
 
-    // Call Google Gemini API
+    // Call Mistral AI API
 
-    console.log('=== GEMINI API CALL ===');
+    console.log('=== MISTRAL API CALL ===');
     console.log('Prompt length:', prompt.length);
     console.log('========================');
 
-    let questions: QuizQuestion[];
-    try {
-      questions = await generateJSONWithGemini(prompt, {
-        temperature: 0.3, // Lower temperature for more consistent JSON
-        maxTokens: 4000
-      });
-      console.log('=== GEMINI API RESPONSE ===');
-      console.log('Questions received:', questions.length);
-      console.log('========================');
-    } catch (error: any) {
-      console.error('=== GEMINI API ERROR ===');
-      console.error('Error:', error);
-      console.error('Error message:', error.message);
-      console.error('========================');
-      throw new Error(`Failed to generate quiz questions: ${error.message}`);
+    let questions: QuizQuestion[] | null = null;
+    const maxAttempts = 3;
+
+    for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+      try {
+        const result = await generateJSONWithMistral(prompt, {
+          temperature: 0.3, // Lower temperature for more consistent JSON
+          maxTokens: 4000
+        });
+
+        // Validate response
+        if (!Array.isArray(result)) {
+          throw new Error(`Invalid response: expected array, got ${typeof result}`);
+        }
+
+        if (result.length === 0) {
+          throw new Error('Empty questions array received');
+        }
+
+        questions = result;
+        break; // Success, exit retry loop
+
+      } catch (error: any) {
+        if (attempt < maxAttempts) {
+          // Wait before retry (exponential backoff)
+          const waitTime = 1000 * attempt;
+          await new Promise(resolve => setTimeout(resolve, waitTime));
+        } else {
+          throw new Error(`Failed to generate quiz questions after ${maxAttempts} attempts: ${error.message}`);
+        }
+      }
     }
 
-    if (!Array.isArray(questions)) {
-      console.error('Questions is not an array:', typeof questions, questions);
-      throw new Error('Invalid response format: expected an array of questions');
-    }
-
-    if (questions.length === 0) {
-      throw new Error('No questions generated. The AI returned an empty array.');
+    if (!questions) {
+      throw new Error('Failed to generate quiz questions: all attempts failed');
     }
 
     if (questions.length < 10) {

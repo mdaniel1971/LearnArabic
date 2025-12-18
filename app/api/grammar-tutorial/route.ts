@@ -292,7 +292,16 @@ export async function POST(request: NextRequest) {
     }
 
     // Global instruction for all grammar tutorial prompts
-    const globalInstruction = "IMPORTANT: When providing Quranic examples with translations, always give natural, grammatically correct English translations. Do NOT provide word-for-word literal translations that sound awkward. The translation should read fluently as proper English.\n\n";
+    const globalInstruction = `⚠️ CRITICAL: AUTHORITATIVE GRAMMATICAL DATA
+
+You are provided with AUTHORITATIVE grammatical data from the Quranic Arabic Corpus database.
+This data is CORRECT and has been verified. Do NOT re-analyze or second-guess it.
+Your job is to EXPLAIN these features to learners, not determine what they are.
+
+If you contradict the provided grammatical data (e.g., saying Form II when the database says Form I), 
+the tutorial will be rejected as incorrect.
+
+IMPORTANT: When providing Quranic examples with translations, always give natural, grammatically correct English translations. Do NOT provide word-for-word literal translations that sound awkward. The translation should read fluently as proper English.\n\n`;
 
     // Build form number instruction if form is available
     let formInstruction = '';
@@ -312,10 +321,14 @@ export async function POST(request: NextRequest) {
     const grammarConcept = grammarSubheading;
     const prompt = globalInstruction + formInstruction + idafaInstruction + `You are teaching Quranic Arabic to an advanced learner seeking scholarly depth.
 
+Your role: You are a TEACHER explaining the grammatical features that have been PROVIDED to you.
+You are NOT an analyzer determining what the features are - that has already been done by the Quranic Arabic Corpus.
+
 Provide a comprehensive explanation of ${grammarConcept}:
 - Use classical Arabic grammatical terminology (nahw/sarf)
-${formNumber !== null ? `- ${isVerb ? 'This is' : isAdjective ? 'This word is derived from' : 'This word is related to'} Form ${['I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X'][formNumber - 1]} (Form ${formNumber}). You MUST use this exact form number. Use both Western and Arabic terminology (e.g., Form ${['I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X'][formNumber - 1]}/[Arabic term])` : '- If this is a verb or derived from a verb, identify its form (I-X) using both Western and Arabic terminology (e.g., Form IV/الإفعال)'}
-${formNumber !== null && isAdjective ? `- ALWAYS state explicitly: "${arabic_word} is an Active Participle (or verbal noun) derived from Form ${['I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X'][formNumber - 1]} (Form ${formNumber})"` : formNumber === null ? '- ALWAYS include information on what verb form the word is derived from where possible. For example, if it is an Active Participle derived from Form X, state: "is an Active Participle derived from Form X". If it is a verbal noun (masdar) or other derivative, identify the source verb form.' : ''}
+${formNumber !== null ? `- ${isVerb ? 'This is' : isAdjective ? 'This word is derived from' : 'This word is related to'} Form ${['I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X'][formNumber - 1]} (Form ${formNumber}). You MUST use this EXACT form number from the provided data. Use both Western and Arabic terminology (e.g., Form ${['I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X'][formNumber - 1]}/[Arabic term]). Do NOT analyze or determine the form yourself.` : grammar_info.form ? `- Form: ${grammar_info.form}. You MUST use this EXACT form value. Do NOT analyze or determine the form yourself.` : ''}
+${formNumber !== null && isAdjective ? `- ALWAYS state explicitly: "${arabic_word} is an Active Participle (or verbal noun) derived from Form ${['I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X'][formNumber - 1]} (Form ${formNumber})" using the EXACT form number provided.` : ''}
+- Use the EXACT person, number, gender, case, and other grammatical features from "GIVEN GRAMMATICAL FACTS" above
 - Explain linguistic reasoning and etymology where relevant
 - Provide 3-4 examples from different Quranic contexts showing nuance
 - Discuss rhetorical significance (balagha) where applicable
@@ -327,15 +340,51 @@ Context: ${verse_phrase}
 
 Write TWO SHORT PARAGRAPHS maximum. Use bullet points where possible. Treat the learner as a serious student.
 
+CRITICAL MARKDOWN FORMATTING:
+- For bullet lists, use proper markdown format with line breaks:
+  - Each bullet point must be on its own line starting with "- " or "* "
+  - Do NOT use bullet characters (•) in the middle of a sentence
+  - Example CORRECT format:
+    "Key observations include:
+    - Item 1
+    - Item 2
+    - Item 3"
+  - Example WRONG format:
+    "Key observations include: • Item 1 • Item 2 • Item 3"
+- Always put a blank line before and after lists
+- Use proper markdown syntax for all formatting
+
 CRITICAL: Do NOT include patronizing messages, encouragement phrases, or emojis. Do NOT write things like "Keep practicing—you're doing great! 😊" or similar motivational messages. Focus purely on the grammar explanation.
+
+GIVEN GRAMMATICAL FACTS (use these exactly - do NOT re-analyze):
+${grammar_info.part_of_speech ? `- Part of speech: ${grammar_info.part_of_speech}` : ''}
+${grammar_info.form ? `- Form: ${grammar_info.form}` : ''}
+${grammar_info.person ? `- Person: ${grammar_info.person}` : ''}
+${grammar_info.number ? `- Number: ${grammar_info.number}` : ''}
+${grammar_info.gender ? `- Gender: ${grammar_info.gender}` : ''}
+${grammar_info.case ? `- Case: ${grammar_info.case}` : ''}
+${grammar_info.definiteness ? `- Definiteness: ${grammar_info.definiteness}` : ''}
+${grammar_info.tense ? `- Tense: ${grammar_info.tense}` : grammar_info.aspect ? `- Tense/Aspect: ${grammar_info.aspect}` : ''}
+${grammar_info.mood ? `- Mood: ${grammar_info.mood}` : ''}
+${grammar_info.voice ? `- Voice: ${grammar_info.voice}` : ''}
+${grammar_info.notes ? `- Notes: ${grammar_info.notes}` : ''}
+${isCompoundWord ? `- COMPOUND WORD: This word consists of multiple grammatical parts` : ''}
+${hasPronounSuffix ? `- PRONOUN SUFFIX: This word has an attached pronoun suffix` : ''}
 
 WORD DETAILS:
 - Arabic: ${arabic_word}
 ${translation_english ? `- Translation: ${translation_english}` : ''}
 - Classification: ${grammarSubheading}
-- Grammar Details: ${grammarSummary}
 ${verse_context ? `- Verse Context: This word appears in ${surah_name}${verse_context.verse_number ? `, Verse ${verse_context.verse_number}` : ''}` : ''}
 ${verse_context?.full_verse_text ? `- Full verse: ${verse_context.full_verse_text}` : ''}
+
+MANDATORY USAGE RULES:
+${grammar_info.form ? `- When you mention the verb form, say EXACTLY "Form ${grammar_info.form}" using the provided form value. Do not substitute your own analysis.` : ''}
+- When you mention person/number/gender/case/tense/mood/voice, use EXACTLY the provided values from "GIVEN GRAMMATICAL FACTS" above.
+- Do NOT analyze the word yourself to determine its form, person, number, etc. - use the provided data.
+${grammar_info.form ? `- If the data says "Form ${grammar_info.form}", say "Form ${grammar_info.form}" - do NOT say any other form.` : ''}
+${grammar_info.person ? `- If the data says "${grammar_info.person} person", say "${grammar_info.person} person" - do NOT say any other person.` : ''}
+${grammar_info.number ? `- If the data says "${grammar_info.number}", say "${grammar_info.number}" - do NOT say any other number.` : ''}
 
 CRITICAL TRANSLATION RULE:
 - Translate Arabic words by their BASE MEANING ONLY, without adding English prepositions
@@ -385,6 +434,35 @@ ${buildContextualGuidance(verse_context, grammar_info)}`;
       .replace(/^Paragraph\s+\d+\s*[-–—]\s*[^\n]+:\s*/gim, '')
       .replace(/^\*\*?[^*\n]*Paragraph\s+\d+[^*\n]*:\*\*?\s*/gim, '')
       .trim();
+
+    // Fix bullet points: Convert inline bullet characters (•) to proper markdown lists
+    // Pattern: "Text: • Item 1 • Item 2" -> "Text:\n- Item 1\n- Item 2"
+    // This handles cases where Claude outputs bullets inline instead of as proper markdown lists
+    explanation = explanation
+      // Match patterns with multiple bullets: "Text: • Item 1 • Item 2 • Item 3"
+      // Split by bullet character and convert to markdown list
+      .replace(/([^•\n]+?):\s*•\s+([^•\n]+(?:\s*•\s+[^•\n]+)+)/g, (match, prefix, bulletText) => {
+        // Split by bullet character and clean up
+        const items = bulletText.split(/\s*•\s*/)
+          .map((item: string) => item.trim())
+          .filter((item: string) => item.length > 0);
+
+        if (items.length > 0) {
+          return `${prefix}:\n${items.map((item: string) => `- ${item}`).join('\n')}`;
+        }
+        return match;
+      })
+      // Also handle cases without colon: "Text • Item 1 • Item 2"
+      .replace(/([^•\n]+?)\s+•\s+([^•\n]+(?:\s*•\s+[^•\n]+)+)/g, (match, prefix, bulletText) => {
+        const items = bulletText.split(/\s*•\s*/)
+          .map((item: string) => item.trim())
+          .filter((item: string) => item.length > 0);
+
+        if (items.length > 0) {
+          return `${prefix}:\n${items.map((item: string) => `- ${item}`).join('\n')}`;
+        }
+        return match;
+      });
 
     // Fix isolated Arabic diacritics that appear after hyphens/dashes
     explanation = explanation

@@ -15,7 +15,7 @@
     "fetch-voice-from-corpus": "tsx scripts/fetch-voice-from-corpus.ts"
   },
   "dependencies": {
-    "@mistralai/mistralai": "^1.10.0",
+    "@google/generative-ai": "^0.24.1",
     "@supabase/ssr": "^0.8.0",
     "@supabase/supabase-js": "^2.39.0",
     "next": "14.2.5",

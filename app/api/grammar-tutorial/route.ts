@@ -1,12 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-
-// Initialize Mistral client dynamically to avoid issues with serverless functions
-async function getMistralClient() {
-  const { Mistral } = await import("@mistralai/mistralai");
-  return new Mistral({
-    apiKey: process.env.MISTRAL_API_KEY || "",
-  });
-}
+import { detectIdafa, detectPreposition, explainGenitiveCase } from "@/utils/idafa-detection";
+import { generateWithGemini } from "@/lib/gemini";
 
 // Get verb form meanings
 function getFormMeaning(form: number): string {
@@ -121,9 +115,9 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    if (!process.env.MISTRAL_API_KEY) {
+    if (!process.env.GOOGLE_GEMINI_API_KEY) {
       return NextResponse.json(
-        { error: "MISTRAL_API_KEY is not configured" },
+        { error: "GOOGLE_GEMINI_API_KEY is not configured" },
         { status: 500 }
       );
     }
@@ -241,6 +235,43 @@ export async function POST(request: NextRequest) {
     const surah_name = verse_context?.surah_name || (verse_context?.surah_number ? `Surah ${verse_context.surah_number}` : '');
     const verse_phrase = verse_context?.full_verse_text || arabic_word;
 
+    // Detect idafa relationship if word is genitive
+    let idafaInstruction = '';
+    const isGenitive = grammar_info?.case === 'genitive' ||
+      (Array.isArray(grammar_info?.features) &&
+        grammar_info.features.some((f: string) =>
+          f?.toLowerCase().includes('genitive')));
+
+    if (isGenitive && verse_context?.surrounding_words && verse_context?.word_position) {
+      const surroundingWords = (verse_context.surrounding_words || []).map((w: any) => ({
+        text_arabic: w.text_arabic || w,
+        word_position: w.word_position || 0,
+        grammar_info: w.grammar_info || null,
+        translation_english: w.translation_english || null
+      }));
+
+      const idafa = detectIdafa(
+        arabic_word,
+        verse_context.word_position,
+        surroundingWords,
+        grammar_info
+      );
+
+      const preposition = detectPreposition(verse_context.word_position, surroundingWords);
+
+      if (idafa.isIdafa && idafa.isMudafIlayhi && idafa.mudafWord) {
+        // Word is mudaf ilayhi in idafa construction
+        const mudafTranslation = surroundingWords.find(
+          (w: any) => w.text_arabic === idafa.mudafWord
+        )?.translation_english || idafa.mudafWord;
+
+        idafaInstruction = `\n⚠️ CRITICAL IDAFA DETECTION:\nThis word (${arabic_word}) is in genitive case because it is the MUDAF ILAYHI (second term) in the idafa (possessive) construction '${idafa.mudafWord} ${arabic_word}' (${mudafTranslation} of [meaning]).\n\nDO NOT say it is genitive because of إِنَّ or any other particle. The genitive case is due to the idafa relationship, NOT because of particles that affect the mudaf (first term).\n\nWhen إِنَّ (or its sisters) appears before an idafa, it affects the mudaf (first term), making it accusative. The mudaf ilayhi (second term) is ALWAYS genitive because of the idafa relationship itself.\n\nExample: In 'إِنَّ يَوۡمَ ٱلۡفَصۡلِ', إِنَّ makes يَوۡمَ accusative (ism inna), but ٱلۡفَصۡلِ is genitive because it is mudaf ilayhi in the idafa 'يَوۡمَ ٱلۡفَصۡلِ' (day of judgment), NOT because of إِنَّ.\n\n`;
+      } else if (preposition) {
+        // Word follows a preposition
+        idafaInstruction = `\n⚠️ PREPOSITION DETECTION:\nThis word (${arabic_word}) is in genitive case because it follows the preposition '${preposition}'.\n\n`;
+      }
+    }
+
     // Extract and normalize form number from grammar_info
     let formNumber: number | null = null;
     if (grammar_info?.form) {
@@ -271,7 +302,7 @@ export async function POST(request: NextRequest) {
 
     // Advanced prompt only
     const grammarConcept = grammarSubheading;
-    const prompt = globalInstruction + formInstruction + `You are teaching Quranic Arabic to an advanced learner seeking scholarly depth.
+    const prompt = globalInstruction + formInstruction + idafaInstruction + `You are teaching Quranic Arabic to an advanced learner seeking scholarly depth.
 
 Provide a comprehensive explanation of ${grammarConcept}:
 - Use classical Arabic grammatical terminology (nahw/sarf)
@@ -314,34 +345,17 @@ ${buildContextualGuidance(verse_context, grammar_info)}`;
     console.log('Has pronoun suffix:', hasPronounSuffix);
     console.log('==================');
 
-    const mistral = await getMistralClient();
-    const response = await mistral.chat.complete({
-      model: "mistral-small-latest",
-      messages: [
-        {
-          role: "user",
-          content: prompt,
-        },
-      ],
-      maxTokens: 500,
-      temperature: 0.7,
-    });
-
+    // Call Google Gemini API
     let explanation: string = "Unable to generate explanation.";
-    const content = response.choices[0]?.message?.content;
-
-    // Ensure explanation is a string
-    if (typeof content === 'string') {
+    try {
+      const content = await generateWithGemini(prompt, {
+        temperature: 0.7,
+        maxTokens: 500
+      });
       explanation = content;
-    } else if (Array.isArray(content)) {
-      // If it's an array of ContentChunk, convert to string
-      explanation = content.map(chunk => {
-        if (typeof chunk === 'string') return chunk;
-        if (chunk && typeof chunk === 'object' && 'text' in chunk) {
-          return (chunk as { text?: string }).text || '';
-        }
-        return '';
-      }).join('');
+    } catch (error: any) {
+      console.error('Gemini API error:', error);
+      throw new Error(`Failed to generate grammar tutorial: ${error.message}`);
     }
 
     // Remove common introductory phrases

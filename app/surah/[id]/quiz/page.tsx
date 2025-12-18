@@ -30,6 +30,7 @@ export default function QuizPage() {
   const [showResults, setShowResults] = useState(false);
   const [results, setResults] = useState<any>(null);
   const [surahName, setSurahName] = useState('');
+  const [surahNameArabic, setSurahNameArabic] = useState('');
   const [surahId, setSurahId] = useState<number | null>(null);
   const [grammarTutorialOpen, setGrammarTutorialOpen] = useState(false);
   const [grammarTutorialData, setGrammarTutorialData] = useState<{ arabicWord: string; grammarInfo: any; wordId?: number } | null>(null);
@@ -56,6 +57,7 @@ export default function QuizPage() {
       }
 
       setSurahName(surah.name_english);
+      setSurahNameArabic(surah.name_arabic);
       setSurahId(surah.id);
 
       // Fetch words data for grammar tutorials
@@ -67,59 +69,48 @@ export default function QuizPage() {
       const allWords = verses?.flatMap(v => v.words || []) || [];
       setWordsData(allWords);
 
-      // Check if quiz exists
-      const checkResponse = await fetch('/api/quiz/check-bank', {
+      // Generate quiz on-the-fly (don't store in quiz_bank)
+      setGenerating(true);
+      const generateResponse = await fetch('/api/quiz/generate-on-the-fly', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ surahId: surah.id })
       });
 
-      if (!checkResponse.ok) {
-        const errorData = await checkResponse.json().catch(() => ({}));
-        throw new Error(errorData.error || `Failed to check quiz bank: ${checkResponse.statusText}`);
+      if (!generateResponse.ok) {
+        const errorData = await generateResponse.json();
+        throw new Error(errorData.error || 'Failed to generate quiz');
       }
 
-      const checkData = await checkResponse.json();
-      const { needsGeneration } = checkData;
+      const generateData = await generateResponse.json();
+      setGenerating(false);
 
-      if (needsGeneration) {
-        // Generate quiz
-        setGenerating(true);
-        const generateResponse = await fetch('/api/quiz/generate', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ surahId: surah.id })
-        });
-
-        if (!generateResponse.ok) {
-          const errorData = await generateResponse.json();
-          throw new Error(errorData.error || 'Failed to generate quiz');
-        }
-        setGenerating(false);
+      if (!generateData.questions || generateData.questions.length === 0) {
+        throw new Error('No questions generated for this quiz');
       }
 
-      // Fetch questions from quiz_bank
-      const { data: quizQuestions, error } = await supabase
-        .from('quiz_bank')
-        .select('*')
-        .eq('surah_id', surah.id);
-
-      if (error) {
-        console.error('Supabase error fetching quiz questions:', error);
-        throw new Error(`Database error: ${error.message}. Make sure the quiz_bank table exists and RLS policies are set correctly.`);
-      }
-
-      if (!quizQuestions || quizQuestions.length === 0) {
-        throw new Error('No quiz questions found. The quiz may not have been generated successfully.');
-      }
-
-      // Shuffle questions and their options
-      const shuffled = quizQuestions
+      // Shuffle questions and their options for variety
+      const shuffled = generateData.questions
         .sort(() => Math.random() - 0.5)
-        .map(q => ({
-          ...q,
-          options: q.options ? [...(q.options as string[])].sort(() => Math.random() - 0.5) : null
-        }));
+        .map((q: any) => {
+          // Ensure options is an array
+          const optionsArray = Array.isArray(q.options) && q.options.length > 0 ? q.options : [];
+
+          console.log('Question options:', q.question, optionsArray); // Debug log
+
+          return {
+            id: q.id || `temp-${Math.random()}`,
+            surah_id: surah.id,
+            question_text: q.question || q.question_text || '',
+            question_type: (q.type || q.question_type || 'multiple_choice') as 'multiple_choice' | 'fill_blank',
+            correct_answer: q.correct_answer || q.correctAnswer || '',
+            word_id: q.word_id || null,
+            grammar_point: q.grammar_point || null,
+            explanation: q.explanation || null,
+            created_at: new Date().toISOString(),
+            options: optionsArray.length > 0 ? [...optionsArray].sort(() => Math.random() - 0.5) : null
+          };
+        });
 
       setQuestions(shuffled);
       setLoading(false);
@@ -234,9 +225,12 @@ export default function QuizPage() {
     }
   }
 
-  async function openGrammarTutorial(wordId: number, arabicWord?: string) {
-    if (!wordId) {
-      console.log('Missing word_id for grammar tutorial');
+  async function openGrammarTutorial(wordId: number | string | null | undefined, arabicWord?: string) {
+    // Convert to number if needed
+    const numericWordId = typeof wordId === 'string' ? parseInt(wordId, 10) : wordId;
+
+    if (!numericWordId || isNaN(numericWordId)) {
+      console.log('Missing or invalid word_id for grammar tutorial:', wordId);
       return;
     }
 
@@ -244,13 +238,13 @@ export default function QuizPage() {
     let finalArabicWord = arabicWord;
 
     // Try to find word in wordsData first
-    const word = wordsData.find(w => w.id === wordId);
+    const word = wordsData.find(w => w.id === numericWordId);
 
     if (word && word.grammar_info) {
       setGrammarTutorialData({
         arabicWord: finalArabicWord || word.text_arabic,
         grammarInfo: word.grammar_info,
-        wordId: wordId
+        wordId: numericWordId
       });
       setGrammarTutorialOpen(true);
       return;
@@ -261,18 +255,18 @@ export default function QuizPage() {
     const { data: wordData, error } = await supabase
       .from('words')
       .select('text_arabic, grammar_info')
-      .eq('id', wordId)
+      .eq('id', numericWordId)
       .single();
 
     if (!error && wordData && wordData.grammar_info) {
       setGrammarTutorialData({
         arabicWord: finalArabicWord || wordData.text_arabic,
         grammarInfo: wordData.grammar_info,
-        wordId: wordId
+        wordId: numericWordId
       });
       setGrammarTutorialOpen(true);
     } else {
-      console.warn('Could not fetch word data or grammar_info for word_id:', wordId, error);
+      console.warn('Could not fetch word data or grammar_info for word_id:', numericWordId, error);
     }
   }
 
@@ -362,7 +356,13 @@ export default function QuizPage() {
             </button>
           </div>
           <div className="bg-white rounded-lg shadow-md p-6 mb-6">
-            <h1 className="text-2xl font-bold mb-4">Quiz Results: {surahName}</h1>
+            <h1 className="text-2xl font-bold mb-2">Quiz Results</h1>
+            <div className="mb-4">
+              <div dir="rtl" className="text-3xl font-amiri mb-1" style={{ fontFamily: 'Amiri, serif', direction: 'rtl', textAlign: 'right' }}>
+                {surahNameArabic}
+              </div>
+              <div className="text-lg text-gray-600">{surahName}</div>
+            </div>
             <div className="text-center mb-6">
               <div className="text-5xl font-bold text-primary-600 mb-2">
                 {results.score}/{results.totalQuestions}
@@ -390,7 +390,15 @@ export default function QuizPage() {
                       <button
                         onClick={() => {
                           if (result.word_id) {
-                            openGrammarTutorial(result.word_id, arabicWord || undefined);
+                            // Ensure word_id is a number
+                            const wordId = typeof result.word_id === 'string'
+                              ? parseInt(result.word_id, 10)
+                              : result.word_id;
+                            if (!isNaN(wordId)) {
+                              openGrammarTutorial(wordId, arabicWord || undefined);
+                            } else {
+                              console.warn('Invalid word_id:', result.word_id);
+                            }
                           }
                         }}
                         disabled={!result.word_id}
@@ -492,6 +500,19 @@ export default function QuizPage() {
   const arabicMatch = questionText.match(/'([^']+)'/);
   const arabicWord = arabicMatch ? arabicMatch[1] : '';
 
+  // Debug: Log current question to see what we have
+  if (currentQuestion === 0) {
+    console.log('First question debug:', {
+      question_text: currentQ.question_text,
+      question_type: currentQ.question_type,
+      options: currentQ.options,
+      options_type: typeof currentQ.options,
+      options_is_array: Array.isArray(currentQ.options),
+      options_length: Array.isArray(currentQ.options) ? currentQ.options.length : 'N/A',
+      full_question: currentQ
+    });
+  }
+
   return (
     <div className="min-h-screen bg-gray-50 p-4">
       <div className="max-w-3xl mx-auto">
@@ -505,7 +526,13 @@ export default function QuizPage() {
         </div>
         <div className="bg-white rounded-lg shadow-md p-6">
           <div className="mb-6">
-            <h1 className="text-2xl font-bold mb-2">Quiz: {surahName}</h1>
+            <h1 className="text-2xl font-bold mb-2">Quiz</h1>
+            <div className="mb-4">
+              <div dir="rtl" className="text-3xl font-amiri mb-1" style={{ fontFamily: 'Amiri, serif', direction: 'rtl', textAlign: 'right' }}>
+                {surahNameArabic}
+              </div>
+              <div className="text-lg text-gray-600">{surahName}</div>
+            </div>
             <div className="flex items-center justify-between text-sm text-gray-600">
               <span>Question {currentQuestion + 1} of {questions.length}</span>
               <span>
@@ -521,23 +548,23 @@ export default function QuizPage() {
           </div>
 
           <div className="mb-8">
-            <h2 className="text-xl mb-4 font-semibold">
+            <h2 className="text-xl mb-4 font-semibold leading-relaxed" style={{ lineHeight: '1.8' }}>
               {questionText.split("'").map((part, i) => {
                 if (i % 2 === 1) {
                   // This is the Arabic word
                   return (
-                    <span key={i} dir="rtl" className="inline-block" style={{ fontFamily: 'Amiri, serif', fontSize: '28px', direction: 'rtl', textAlign: 'right' }}>
+                    <span key={i} dir="rtl" className="inline-block" style={{ fontFamily: 'Amiri, serif', fontSize: '28px', direction: 'rtl', textAlign: 'right', lineHeight: '1.8' }}>
                       {part}
                     </span>
                   );
                 }
-                return <span key={i}>{part}</span>;
+                return <span key={i} style={{ lineHeight: '1.8' }}>{part}</span>;
               })}
             </h2>
 
-            {currentQ.question_type === 'multiple_choice' && currentQ.options && (
+            {currentQ.question_type === 'multiple_choice' && Array.isArray(currentQ.options) && currentQ.options.length > 0 && (
               <div className="space-y-3">
-                {(currentQ.options as string[]).map((option, index) => {
+                {currentQ.options.map((option, index) => {
                   // Check if this option is correct (exact match or synonym)
                   const isThisOptionCorrect = hasAnswered && currentFeedback
                     ? areAnswersSynonyms(option, currentFeedback.correctAnswer)

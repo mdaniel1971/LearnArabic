@@ -1,6 +1,6 @@
 import { createClient } from '@/utils/supabase/server';
 import { NextRequest, NextResponse } from 'next/server';
-import { generateQuizForSurah } from '@/utils/quiz-generation';
+import { generateQuizForSurahOnTheFly } from '@/utils/quiz-generation-on-the-fly';
 
 export async function POST(request: NextRequest) {
   try {
@@ -22,8 +22,8 @@ export async function POST(request: NextRequest) {
       }, { status: 401 });
     }
 
-    // Use the shared quiz generation utility
-    const result = await generateQuizForSurah(supabase, surahId);
+    // Generate quiz on-the-fly (returns questions directly, doesn't store them)
+    const result = await generateQuizForSurahOnTheFly(supabase, surahId);
 
     if (!result.success) {
       return NextResponse.json({
@@ -33,7 +33,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({
       success: true,
-      questionsGenerated: result.questionsGenerated
+      questions: result.questions || []
     });
 
   } catch (error: any) {

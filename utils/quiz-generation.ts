@@ -1,4 +1,5 @@
 import { SupabaseClient } from '@supabase/supabase-js';
+import { generateJSONWithGemini } from '@/lib/gemini';
 
 interface QuizGenerationResult {
   success: boolean;
@@ -18,11 +19,11 @@ export async function generateQuizForSurah(
   surahId: number
 ): Promise<QuizGenerationResult> {
   try {
-    if (!process.env.MISTRAL_API_KEY) {
+    if (!process.env.GOOGLE_GEMINI_API_KEY) {
       return {
         success: false,
         questionsGenerated: 0,
-        error: 'MISTRAL_API_KEY is not configured'
+        error: 'GOOGLE_GEMINI_API_KEY is not configured'
       };
     }
 
@@ -103,6 +104,21 @@ NEW FORMAT (MUST USE - ENGLISH TRANSLATION IS REQUIRED):
 
 MANDATORY: Every grammar question MUST include the English translation in parentheses after the Arabic phrase.
 
+CRITICAL: GENITIVE CASE EXPLANATIONS - CHECK IDAFA FIRST:
+When asking about why a word is in genitive case, you MUST check in this priority order:
+1. **FIRST: Is it mudaf ilayhi (second term in idafa/possessive construction)?**
+   - If the previous word is an indefinite noun (mudaf) and the target word is genitive, it's likely idafa
+   - Example: In 'يَوۡمَ ٱلۡفَصۡلِ', ٱلۡفَصۡلِ is genitive because it's mudaf ilayhi in the idafa 'يَوۡمَ ٱلۡفَصۡلِ' (day of judgment)
+   - DO NOT say it's genitive because of إِنَّ or other particles - those affect the mudaf, not the mudaf ilayhi
+2. **SECOND: Does it follow a preposition?**
+   - Prepositions like فِي، مِن، إِلَى، بِ، etc. make the following word genitive
+   - Example: In 'فِي ٱلسَّمَاءِ', ٱلسَّمَاءِ is genitive because it follows فِي
+3. **THIRD: Other grammatical reasons**
+
+When explaining genitive case in quiz explanations:
+- If idafa: "This word is genitive (majrur) because it is the mudaf ilayhi (second term) in the possessive construction '[mudaf] [mudaf ilayhi]'"
+- If preposition: "This word is genitive (majrur) because it follows the preposition '[preposition]'"
+
 REQUIREMENTS FOR GRAMMAR QUESTIONS:
 1. ALWAYS start with "In the phrase '[Arabic text]' ([English translation]), the word [target word] is:"
 2. Include the full verse phrase (2-5 words) where the target word appears
@@ -118,6 +134,7 @@ REQUIREMENTS FOR GRAMMAR QUESTIONS:
    - "subject form (nominative)"
    - "object form (accusative)" 
    - "after preposition form (genitive)"
+   - "second term in possessive construction (genitive)" - for mudaf ilayhi
 7. NEVER mention word_id in the question text
 8. Include the word_id as a NUMBER in the JSON (for database reference only)
 
@@ -191,43 +208,22 @@ IMPORTANT FOR EXPLANATIONS:
 - Always use readable transliterations in parentheses when explaining diacritics.
 - **TERMINOLOGY**: Always use "tense" terminology instead of "aspect" when discussing Arabic verbs in explanations. Use "perfect tense" or "past tense" instead of "perfect aspect", and "imperfect tense" or "present/future tense" instead of "imperfect aspect". This terminology is more accessible for English-speaking learners who aren't linguistics students.`;
 
-    // Call Mistral AI
-    const mistralResponse = await fetch('https://api.mistral.ai/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${process.env.MISTRAL_API_KEY}`
-      },
-      body: JSON.stringify({
-        model: 'mistral-large-latest',
-        messages: [{ role: 'user', content: prompt }],
-        temperature: 0.7,
-        max_tokens: 2000
-      })
-    });
-
-    if (!mistralResponse.ok) {
-      throw new Error(`Mistral API error: ${mistralResponse.statusText}`);
-    }
-
-    const mistralData = await mistralResponse.json();
-
-    if (!mistralData.choices || !mistralData.choices[0] || !mistralData.choices[0].message) {
-      console.error('Unexpected Mistral API response:', mistralData);
-      throw new Error('Invalid response from Mistral AI. Please check the API key and try again.');
-    }
-
-    let questionsText = mistralData.choices[0].message.content.trim();
-
-    // Clean up response - remove markdown code blocks if present
-    questionsText = questionsText.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
-
-    let questions;
+    // Call Google Gemini API
+    let questions: any[];
     try {
-      questions = JSON.parse(questionsText);
-    } catch (parseError: any) {
-      console.error('Failed to parse Mistral response as JSON:', questionsText);
-      throw new Error(`Failed to parse quiz questions: ${parseError.message}. Mistral may have returned invalid JSON.`);
+      questions = await generateJSONWithGemini(prompt, {
+        temperature: 0.7,
+        maxTokens: 2000
+      });
+    } catch (error: any) {
+      console.error('Gemini API error:', error);
+      throw new Error(`Failed to generate quiz questions: ${error.message}`);
+    }
+
+    // Validate response is an array
+    if (!Array.isArray(questions)) {
+      console.error('Unexpected Gemini API response:', questions);
+      throw new Error('Invalid response from Gemini API. Expected an array of questions.');
     }
 
     // Validate we got 10 questions

@@ -15,7 +15,7 @@
  * Required environment variables (in .env.local):
  * - NEXT_PUBLIC_SUPABASE_URL
  * - SUPABASE_SERVICE_ROLE_KEY (or SUPABASE_SERVICE_KEY)
- * - MISTRAL_API_KEY
+ * - GOOGLE_GEMINI_API_KEY
  */
 
 // Load environment variables from .env.local
@@ -142,8 +142,8 @@ async function main() {
     process.exit(1);
   }
 
-  if (!process.env.MISTRAL_API_KEY) {
-    console.error('❌ Missing MISTRAL_API_KEY environment variable');
+  if (!process.env.GOOGLE_GEMINI_API_KEY) {
+    console.error('❌ Missing GOOGLE_GEMINI_API_KEY environment variable');
     process.exit(1);
   }
 

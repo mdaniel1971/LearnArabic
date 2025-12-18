@@ -93,10 +93,10 @@ export default function GrammarTutorialModal({
             const surah = verse.surahs as any;
             const verseId = verse.id || wordData.verse_id;
 
-            // Fetch surrounding words (2 words before and after)
+            // Fetch surrounding words (2 words before and after) with grammar info and translations
             const { data: surroundingWords } = await supabase
               .from('words')
-              .select('text_arabic, word_position')
+              .select('text_arabic, word_position, grammar_info, translation_english')
               .eq('verse_id', verseId)
               .gte('word_position', Math.max(1, (wordData.word_position || 1) - 2))
               .lte('word_position', (wordData.word_position || 1) + 2)

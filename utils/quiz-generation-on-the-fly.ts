@@ -384,48 +384,28 @@ Remember: Return ONLY the JSON array. No other text.`;
     console.log('Prompt length:', prompt.length);
     console.log('========================');
 
-    let questions: QuizQuestion[] | null = null;
-    const maxAttempts = 3;
+    // Generate quiz questions (retry logic is handled inside generateJSONWithClaude)
+    const result = await generateJSONWithClaude(prompt, {
+      temperature: 0.3, // Lower temperature for more consistent JSON
+      maxTokens: 4000
+    });
 
-    for (let attempt = 1; attempt <= maxAttempts; attempt++) {
-      try {
-        const result = await generateJSONWithClaude(prompt, {
-          temperature: 0.3, // Lower temperature for more consistent JSON
-          maxTokens: 4000
-        });
+    // Fallback option (commented out - uncomment if switching back to Groq)
+    // const result = await generateJSONWithGroq(prompt, {
+    //   temperature: 0.3,
+    //   maxTokens: 4000
+    // });
 
-        // Fallback option (commented out - uncomment if switching back to Groq)
-        // const result = await generateJSONWithGroq(prompt, {
-        //   temperature: 0.3,
-        //   maxTokens: 4000
-        // });
-
-        // Validate response
-        if (!Array.isArray(result)) {
-          throw new Error(`Invalid response: expected array, got ${typeof result}`);
-        }
-
-        if (result.length === 0) {
-          throw new Error('Empty questions array received');
-        }
-
-        questions = result;
-        break; // Success, exit retry loop
-
-      } catch (error: any) {
-        if (attempt < maxAttempts) {
-          // Wait before retry (exponential backoff)
-          const waitTime = 1000 * attempt;
-          await new Promise(resolve => setTimeout(resolve, waitTime));
-        } else {
-          throw new Error(`Failed to generate quiz questions after ${maxAttempts} attempts: ${error.message}`);
-        }
-      }
+    // Validate response
+    if (!Array.isArray(result)) {
+      throw new Error(`Invalid response: expected array, got ${typeof result}`);
     }
 
-    if (!questions) {
-      throw new Error('Failed to generate quiz questions: all attempts failed');
+    if (result.length === 0) {
+      throw new Error('Empty questions array received');
     }
+
+    const questions = result;
 
     if (questions.length < 10) {
       console.warn(`Only ${questions.length} questions generated, expected 10`);

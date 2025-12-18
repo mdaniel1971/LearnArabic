@@ -1,6 +1,7 @@
 import { SupabaseClient } from '@supabase/supabase-js';
 import { detectIdafa, detectPreposition } from '@/utils/idafa-detection';
-import { generateJSONWithMistral } from '@/lib/mistral';
+import { generateJSONWithClaude } from '@/lib/claude';
+// import { generateJSONWithGroq } from '@/lib/groq'; // Fallback option
 
 interface QuizQuestion {
   type: string;
@@ -27,12 +28,19 @@ export async function generateQuizForSurahOnTheFly(
   surahId: number
 ): Promise<QuizGenerationResult> {
   try {
-    if (!process.env.MISTRAL_API_KEY) {
+    if (!process.env.ANTHROPIC_API_KEY) {
       return {
         success: false,
-        error: 'MISTRAL_API_KEY is not configured'
+        error: 'ANTHROPIC_API_KEY is not configured'
       };
     }
+    // Fallback check (commented out - uncomment if switching back to Groq)
+    // if (!process.env.GROQ_API_KEY) {
+    //   return {
+    //     success: false,
+    //     error: 'GROQ_API_KEY is not configured'
+    //   };
+    // }
 
     // Fetch surah data with all words
     const { data: surahData, error: surahError } = await supabase
@@ -81,8 +89,17 @@ export async function generateQuizForSurahOnTheFly(
       };
     }) || [];
 
-    // Create phrase contexts for each word with proper translations
-    const wordContexts = wordsData.map((word: any) => {
+    // Create phrase contexts only for words with grammar info (likely to be used in grammar questions)
+    // This reduces prompt size significantly
+    const wordsWithGrammar = wordsData.filter((w: any) => w.grammar_info && (
+      w.grammar_info.part_of_speech === 'noun' ||
+      w.grammar_info.part_of_speech === 'adjective' ||
+      w.grammar_info.part_of_speech === 'verb' ||
+      w.grammar_info.case
+    ));
+
+    // Create phrase contexts for each word with proper translations and grammatical relationships
+    const wordContexts = wordsWithGrammar.map((word: any) => {
       // Find the verse this word belongs to
       const verse = verseContexts.find((v: any) =>
         v.words.some((w: any) => w.id === word.id)
@@ -90,8 +107,10 @@ export async function generateQuizForSurahOnTheFly(
 
       if (!verse) return null;
 
-      // Get 2-3 words of context around this word
+      // Get full verse context for grammatical analysis
       const wordIndex = verse.words.findIndex((w: any) => w.id === word.id);
+
+      // Get 2-3 words of context around this word for phrase display
       const startIndex = Math.max(0, wordIndex - 1);
       const endIndex = Math.min(verse.words.length, wordIndex + 3);
       const contextWords = verse.words.slice(startIndex, endIndex);
@@ -99,13 +118,25 @@ export async function generateQuizForSurahOnTheFly(
       const phraseArabic = contextWords.map((w: any) => w.text_arabic).join(' ');
       const phraseTranslation = contextWords.map((w: any) => w.translation_english || '').filter((t: string) => t).join(' ');
 
+      // Build verse structure with all words and their grammar info for context
+      const verseStructure = verse.words.map((w: any, idx: number) => ({
+        position: idx + 1,
+        arabic: w.text_arabic,
+        translation: w.translation_english || '',
+        grammar: w.grammar_info || {}
+      }));
+
       return {
         word_id: word.id,
         target_word: word.text_arabic,
         target_translation: word.translation_english,
         phrase_arabic: phraseArabic,
         phrase_translation: phraseTranslation,
-        grammar: word.grammar_info
+        grammar: word.grammar_info,
+        full_verse_arabic: verse.text_arabic,
+        full_verse_translation: verse.translation,
+        verse_number: verse.verse_number,
+        verse_structure: verseStructure // Full verse with all words and their grammar
       };
     }).filter(Boolean);
 
@@ -119,14 +150,53 @@ export async function generateQuizForSurahOnTheFly(
 
 Available Data:
 
-Words with Individual Translations:
-${wordsData.map((w: any) => `- word_id: ${w.id}, Arabic: ${w.text_arabic}, transliteration: ${w.transliteration || 'N/A'}, translation: ${w.translation_english || 'N/A'}${w.grammar_info ? `, grammar: ${JSON.stringify(w.grammar_info)}` : ''}`).join('\n')}
+Words with Individual Translations (compact format):
+${wordsData.map((w: any) => {
+      const g = w.grammar_info || {};
+      const grammarStr = [g.part_of_speech, g.case, g.gender, g.number].filter(Boolean).join(',');
+      return `- word_id: ${w.id}, ${w.text_arabic} = "${w.translation_english || 'N/A'}" [${grammarStr || 'N/A'}]`;
+    }).join('\n')}
 
 Phrase Contexts (for Grammar Questions - USE THESE EXACT TRANSLATIONS):
-${wordContexts.map((ctx: any) => `- word_id: ${ctx.word_id}, target: ${ctx.target_word}, phrase: "${ctx.phrase_arabic}" = "${ctx.phrase_translation}"`).join('\n')}
+${wordContexts.map((ctx: any) => {
+      // Compact grammar representation - only key fields
+      const grammarStr = ctx.grammar ? [
+        ctx.grammar.part_of_speech,
+        ctx.grammar.case,
+        ctx.grammar.gender,
+        ctx.grammar.number
+      ].filter(Boolean).join(',') : 'N/A';
+
+      let contextInfo = `- word_id: ${ctx.word_id}, target: ${ctx.target_word}, phrase: "${ctx.phrase_arabic}" = "${ctx.phrase_translation}"`;
+      contextInfo += `\n  Grammar: ${grammarStr}`;
+      contextInfo += `\n  Verse ${ctx.verse_number}: "${ctx.full_verse_arabic}"`;
+
+      // Only include nearby words (2 before, 2 after) with compact grammar for context
+      const wordIndex = ctx.verse_structure.findIndex((w: any) => w.arabic === ctx.target_word);
+      const startIdx = Math.max(0, wordIndex - 2);
+      const endIdx = Math.min(ctx.verse_structure.length, wordIndex + 3);
+      const nearbyWords = ctx.verse_structure.slice(startIdx, endIdx);
+
+      if (nearbyWords.length > 0) {
+        contextInfo += `\n  Context: ${nearbyWords.map((w: any) => {
+          const g = w.grammar || {};
+          const gStr = [g.part_of_speech, g.case].filter(Boolean).join('/');
+          return `${w.arabic}(${gStr || 'N/A'})`;
+        }).join(' ')}`;
+      }
+
+      return contextInfo;
+    }).join('\n')}
+
+${surahData.surah_number === 1 ? `**SPECIAL NOTE FOR AL-FATIHA:**
+- In verse 1, ٱلرَّحْمَـٰنِ and ٱلرَّحِيمِ are both adjectives describing ٱللَّهِ
+- They are coordinate adjectives (not modifying each other)
+- They take genitive case to match ٱللَّهِ which is genitive after بِسْمِ
+- When explaining the case of ٱلرَّحْمَـٰنِ or ٱلرَّحِيمِ, state: "This word is genitive because it is an adjective agreeing with ٱللَّهِ, which is genitive as the second term (mudaf ilayhi) in the possessive construction 'بِسْمِ ٱللَّهِ'"
+` : ''}
 
 Complete Verses (for Comprehension Questions):
-${verseContexts.map((v: any) => `- Verse ${v.verse_number}: ${v.text_arabic} (${v.translation || 'translation not available'})`).join('\n') || ''}
+${verseContexts.map((v: any) => `- V${v.verse_number}: ${v.text_arabic}`).join('\n') || ''}
 
 ---
 
@@ -175,6 +245,7 @@ Rules:
 - NO transliteration - only Arabic script and English
 - Use plain language in options
 - Ask simple, direct questions
+- **For case questions**: Use the full verse context and grammatical relationships provided to generate accurate explanations
 
 Question Patterns:
 - For Number: "what is [word]?" → Options: "Singular", "Dual", "Plural"
@@ -182,15 +253,33 @@ Question Patterns:
 - For Role: "what is [word]?" → Options: "The subject", "The object", "A possessive construction"
   **CRITICAL**: Say "The subject", "The object" - NOT "Subject form", "Object form"
 
+**EXPLANATION REQUIREMENTS FOR GRAMMAR QUESTIONS:**
+
+When explaining grammatical case, you MUST:
+1. Identify WHAT the word is agreeing with or relating to
+2. State the grammatical relationship clearly
+3. Use the full verse context provided in "Phrase Contexts"
+4. Reference the grammatical relationships if provided
+
+**For Case Explanations:**
+- If idafa: "This word is genitive because it is the mudaf ilayhi (second term) in the possessive construction '[mudaf] [mudaf ilayhi]' meaning '[translation]'"
+- If preposition: "This word is genitive because it follows the preposition '[preposition]'"
+- If adjective: "This word is [case] because it is an adjective agreeing with [noun] in [case] case. [Noun] is [case] because [reason]"
+- Always identify what the word relates to grammatically, not just state the case
+
+**For Al-Fatiha specifically:**
+- When explaining ٱلرَّحْمَـٰنِ or ٱلرَّحِيمِ: "This word is genitive because it is an adjective agreeing with ٱللَّهِ, which is genitive as the second term (mudaf ilayhi) in the possessive construction 'بِسْمِ ٱللَّهِ'"
+- They are coordinate adjectives (both describe ٱللَّهِ, not each other)
+
 Example:
 {
   "type": "multiple_choice",
-  "question": "In the phrase 'بِسۡمِ ٱللَّهِ ٱلرَّحۡمَـٰنِ' (In the name of Allah, the Most Gracious), what is ٱللَّهِ?",
-  "options": ["The subject", "The object", "Part of a possessive construction", "A time expression"],
-  "correct_answer": "Part of a possessive construction",
+  "question": "In the phrase 'بِسۡمِ ٱللَّهِ ٱلرَّحۡمَـٰنِ' (In the name of Allah, the Most Gracious), what case is ٱلرَّحۡمَـٰنِ in?",
+  "options": ["Nominative", "Genitive", "Accusative", "No case"],
+  "correct_answer": "Genitive",
   "word_id": 456,
-  "grammar_point": "role",
-  "explanation": "ٱللَّهِ is the second term (mudaf ilayhi) in the possessive construction 'بِسۡمِ ٱللَّهِ'."
+  "grammar_point": "case",
+  "explanation": "ٱلرَّحۡمَـٰنِ is genitive because it is an adjective agreeing with ٱللَّهِ, which is genitive as the second term (mudaf ilayhi) in the possessive construction 'بِسْمِ ٱللَّهِ' (in the name of Allah)."
 }
 
 ---
@@ -201,19 +290,42 @@ COMPREHENSION QUESTIONS:
 
 Format: "Verse [number] says: '[Arabic text of verse]'. What [question about meaning/message]?"
 
+**CRITICAL RESTRICTIONS - NEVER ASK:**
+- NEVER ask questions about the surah's name, number, or classification
+- NEVER use verse 1 (Bismillah) for comprehension questions as it's generic across surahs
+- NEVER ask "What is the name of this surah?"
+- NEVER ask "What does the Bismillah tell us about this surah?"
+- NEVER ask "Which surah is this verse from?"
+- Focus on substantive content that teaches understanding of the Quranic message
+
+**WHAT TO ASK INSTEAD:**
+Comprehension questions should ONLY ask about:
+1. The meaning or message of a specific verse
+2. What action is commanded/forbidden in a verse
+3. What characteristic or attribute is described
+4. What consequence or result is mentioned
+
 CRITICAL RULE - Single Verse Precision:
 - The correct answer MUST come ONLY from the specific verse mentioned
 - Do NOT use information from adjacent verses for the correct answer
 - You MAY use adjacent verses' messages as wrong options (distractors)
 - ALWAYS display the Arabic verse text in the question
+- Skip verse 1 (Bismillah) - start from verse 2 or later
 
 Process:
 1. Analyze what THIS verse says (not the next/previous verse)
-2. Include the full Arabic text of the verse in the question
-3. Generate question about the verse's meaning or message
-4. Create distractors from adjacent verses or related themes
+2. Skip verse 1 (Bismillah) - it's generic and not surah-specific
+3. Include the full Arabic text of the verse in the question
+4. Generate question about the verse's meaning, message, command, characteristic, or consequence
+5. Create distractors from adjacent verses or related themes
 
-Example:
+**BAD Examples (DO NOT USE):**
+- "What is the name of this surah?" ❌
+- "What does the Bismillah tell us about this surah?" ❌
+- "Which surah is this verse from?" ❌
+- "Verse 1 says: 'بِسۡمِ ٱللَّهِ ٱلرَّحۡمَـٰنِ ٱلرَّحِيمِ'. What is this phrase called?" ❌
+
+**GOOD Example:**
 {
   "type": "multiple_choice",
   "question": "Verse 16 says: 'بَلۡ تُؤۡثِرُونَ ٱلۡحَيَوٰةَ ٱلدُّنۡيَا'. What human tendency is criticized in this verse?",
@@ -259,12 +371,16 @@ CRITICAL INSTRUCTIONS:
 8. Use plain language: "The subject" not "Subject form"
 9. word_id must be number or null, never string
 10. One option must exactly match correct_answer
+11. NEVER ask about surah name, number, or classification in comprehension questions
+12. NEVER use verse 1 (Bismillah) for comprehension questions - start from verse 2 or later
 
 Remember: Return ONLY the JSON array. No other text.`;
 
     // Call Mistral AI API
 
-    console.log('=== MISTRAL API CALL ===');
+    // Call Claude API
+
+    console.log('=== CLAUDE API CALL ===');
     console.log('Prompt length:', prompt.length);
     console.log('========================');
 
@@ -273,10 +389,16 @@ Remember: Return ONLY the JSON array. No other text.`;
 
     for (let attempt = 1; attempt <= maxAttempts; attempt++) {
       try {
-        const result = await generateJSONWithMistral(prompt, {
+        const result = await generateJSONWithClaude(prompt, {
           temperature: 0.3, // Lower temperature for more consistent JSON
           maxTokens: 4000
         });
+
+        // Fallback option (commented out - uncomment if switching back to Groq)
+        // const result = await generateJSONWithGroq(prompt, {
+        //   temperature: 0.3,
+        //   maxTokens: 4000
+        // });
 
         // Validate response
         if (!Array.isArray(result)) {

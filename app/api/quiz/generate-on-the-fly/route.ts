@@ -6,11 +6,17 @@ export async function POST(request: NextRequest) {
   try {
     const { surahId } = await request.json();
 
-    if (!process.env.MISTRAL_API_KEY) {
+    if (!process.env.ANTHROPIC_API_KEY) {
       return NextResponse.json({
-        error: 'MISTRAL_API_KEY is not configured. Please add it to your .env.local file.'
+        error: 'ANTHROPIC_API_KEY is not configured. Please add it to your .env.local file.'
       }, { status: 500 });
     }
+    // Fallback check (commented out - uncomment if switching back to Groq)
+    // if (!process.env.GROQ_API_KEY) {
+    //   return NextResponse.json({
+    //     error: 'GROQ_API_KEY is not configured. Please add it to your .env.local file.'
+    //   }, { status: 500 });
+    // }
 
     const supabase = await createClient();
 

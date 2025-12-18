@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { detectIdafa, detectPreposition, explainGenitiveCase } from "@/utils/idafa-detection";
-import { generateWithGemini } from "@/lib/gemini";
+import { generateWithClaude } from "@/lib/claude";
+// import { generateWithGroq } from "@/lib/groq"; // Fallback option
 
 // Get verb form meanings
 function getFormMeaning(form: number): string {
@@ -115,12 +116,19 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    if (!process.env.GOOGLE_GEMINI_API_KEY) {
+    if (!process.env.ANTHROPIC_API_KEY) {
       return NextResponse.json(
-        { error: "GOOGLE_GEMINI_API_KEY is not configured" },
+        { error: "ANTHROPIC_API_KEY is not configured" },
         { status: 500 }
       );
     }
+    // Fallback check (commented out - uncomment if switching back to Groq)
+    // if (!process.env.GROQ_API_KEY) {
+    //   return NextResponse.json(
+    //     { error: "GROQ_API_KEY is not configured" },
+    //     { status: 500 }
+    //   );
+    // }
 
     // Check for compound words (multiple parts of speech)
     const featuresArray = Array.isArray((grammar_info as any).features) ? (grammar_info as any).features : [];
@@ -345,16 +353,23 @@ ${buildContextualGuidance(verse_context, grammar_info)}`;
     console.log('Has pronoun suffix:', hasPronounSuffix);
     console.log('==================');
 
-    // Call Google Gemini API
+    // Call Claude API
     let explanation: string = "Unable to generate explanation.";
     try {
-      const content = await generateWithGemini(prompt, {
+      const content = await generateWithClaude(prompt, {
         temperature: 0.7,
         maxTokens: 500
       });
       explanation = content;
+
+      // Fallback option (commented out - uncomment if switching back to Groq)
+      // const content = await generateWithGroq(prompt, {
+      //   temperature: 0.7,
+      //   maxTokens: 500
+      // });
+      // explanation = content;
     } catch (error: any) {
-      console.error('Gemini API error:', error);
+      console.error('Claude API error:', error);
       throw new Error(`Failed to generate grammar tutorial: ${error.message}`);
     }
 

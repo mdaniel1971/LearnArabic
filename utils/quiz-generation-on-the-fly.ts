@@ -1,7 +1,4 @@
 import { SupabaseClient } from '@supabase/supabase-js';
-import { detectIdafa, detectPreposition } from '@/utils/idafa-detection';
-import { generateJSONWithClaude } from '@/lib/claude';
-// import { generateJSONWithGroq } from '@/lib/groq'; // Fallback option
 
 interface QuizQuestion {
   type: string;
@@ -20,429 +17,323 @@ interface QuizGenerationResult {
 }
 
 /**
- * Generates a quiz for a given surah on-the-fly (doesn't store in database)
- * This ensures users always get fresh questions with correct grammar explanations
+ * Shuffle array using Fisher-Yates algorithm
  */
-export async function generateQuizForSurahOnTheFly(
-  supabase: any,
+function shuffleArray<T>(array: T[]): T[] {
+  const shuffled = [...array];
+  for (let i = shuffled.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+  }
+  return shuffled;
+}
+
+/**
+ * Get random words from surah, ensuring we have enough for wrong options
+ */
+async function getRandomWords(
+  supabase: SupabaseClient,
+  surahId: number,
+  count: number,
+  filters?: {
+    hasTranslation?: boolean;
+    hasGrammarField?: string; // e.g., 'case', 'form', 'number'
+  }
+): Promise<any[]> {
+  // Get all verses for this surah
+  const { data: verses, error: versesError } = await supabase
+    .from('verses')
+    .select('id')
+    .eq('surah_id', surahId);
+
+  if (versesError || !verses || verses.length === 0) {
+    return [];
+  }
+
+  const verseIds = verses.map(v => v.id);
+
+  // Build query
+  let query = supabase
+    .from('words')
+    .select('id, text_arabic, translation_english, grammar_info')
+    .in('verse_id', verseIds);
+
+  // Apply filters
+  if (filters?.hasTranslation) {
+    query = query.not('translation_english', 'is', null);
+  }
+
+  if (filters?.hasGrammarField) {
+    // Filter for words where grammar_info contains the field
+    // We'll filter in JavaScript after fetching
+  }
+
+  const { data: words, error } = await query;
+
+  if (error || !words) {
+    return [];
+  }
+
+  // Filter by grammar field if needed
+  let filteredWords = words;
+  if (filters?.hasGrammarField && filters.hasGrammarField) {
+    const fieldName = filters.hasGrammarField;
+    filteredWords = words.filter((w: any) => {
+      const grammar = w.grammar_info || {};
+      return grammar[fieldName] != null;
+    });
+  }
+
+  // Shuffle and return requested count
+  return shuffleArray(filteredWords).slice(0, count);
+}
+
+/**
+ * Generate vocabulary question: "What does [arabic] mean?"
+ */
+function generateVocabularyQuestion(word: any, allWords: any[]): QuizQuestion {
+  const wrongOptions = shuffleArray(allWords)
+    .filter(w => w.id !== word.id && w.translation_english)
+    .slice(0, 3)
+    .map(w => w.translation_english);
+
+  const options = shuffleArray([word.translation_english, ...wrongOptions]);
+
+  return {
+    type: 'multiple_choice',
+    question: `What does the word '${word.text_arabic}' mean?`,
+    options,
+    correct_answer: word.translation_english,
+    word_id: word.id,
+    grammar_point: null,
+    explanation: `'${word.text_arabic}' means '${word.translation_english}'.`
+  };
+}
+
+/**
+ * Generate grammar question based on grammar field
+ */
+function generateGrammarQuestion(
+  word: any,
+  grammarField: 'part_of_speech' | 'case' | 'number' | 'form',
+  allWords: any[]
+): QuizQuestion | null {
+  const grammar = word.grammar_info || {};
+  const value = grammar[grammarField];
+
+  if (!value) {
+    return null;
+  }
+
+  let questionText = '';
+  let options: string[] = [];
+  let explanation = '';
+  let correctAnswer = '';
+
+  switch (grammarField) {
+    case 'part_of_speech':
+      questionText = `What part of speech is '${word.text_arabic}'?`;
+      const validPOS = ['Noun', 'Verb', 'Adjective', 'Preposition', 'Pronoun', 'Particle', 'Conjunction'];
+      // Normalize value to match option format
+      const posValue = typeof value === 'string'
+        ? validPOS.find(pos => pos.toLowerCase() === value.toLowerCase()) || value
+        : value;
+      const wrongPOS = shuffleArray(validPOS.filter(pos => pos !== posValue)).slice(0, 3);
+      options = shuffleArray([posValue, ...wrongPOS]);
+      correctAnswer = posValue;
+      explanation = `'${word.text_arabic}' is a ${posValue}.`;
+      break;
+
+    case 'case':
+      questionText = `What case is '${word.text_arabic}' in?`;
+      const caseOptions = ['Nominative', 'Genitive', 'Accusative'];
+      // Normalize case value (database might have lowercase)
+      const caseValue = typeof value === 'string'
+        ? caseOptions.find(c => c.toLowerCase() === value.toLowerCase()) ||
+        (value.charAt(0).toUpperCase() + value.slice(1).toLowerCase())
+        : value;
+      const wrongCase = shuffleArray(caseOptions.filter(c => c !== caseValue)).slice(0, 3);
+      options = shuffleArray([caseValue, ...wrongCase]);
+      correctAnswer = caseValue;
+      explanation = `'${word.text_arabic}' is in the ${caseValue.toLowerCase()} case.`;
+      break;
+
+    case 'number':
+      questionText = `What is the number of '${word.text_arabic}'?`;
+      const numberOptions = ['Singular', 'Dual', 'Plural'];
+      // Normalize number value (database might have lowercase)
+      const numberValue = typeof value === 'string'
+        ? numberOptions.find(n => n.toLowerCase() === value.toLowerCase()) ||
+        (value.charAt(0).toUpperCase() + value.slice(1).toLowerCase())
+        : value;
+      const wrongNumber = shuffleArray(numberOptions.filter(n => n !== numberValue)).slice(0, 3);
+      options = shuffleArray([numberValue, ...wrongNumber]);
+      correctAnswer = numberValue;
+      explanation = `'${word.text_arabic}' is ${numberValue.toLowerCase()}.`;
+      break;
+
+    case 'form':
+      questionText = `What verb form is '${word.text_arabic}'?`;
+      const formOptions = ['Form I', 'Form II', 'Form III', 'Form IV', 'Form V', 'Form VI', 'Form VII', 'Form VIII', 'Form IX', 'Form X'];
+      const formNum = typeof value === 'number' ? value : parseInt(String(value).replace(/[^0-9]/g, '')) || 1;
+      const formValue = `Form ${['I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X'][Math.max(0, Math.min(9, formNum - 1))]}`;
+      const wrongForm = shuffleArray(formOptions.filter(f => f !== formValue)).slice(0, 3);
+      options = shuffleArray([formValue, ...wrongForm]);
+      correctAnswer = formValue;
+      explanation = `'${word.text_arabic}' is ${formValue}.`;
+      break;
+  }
+
+  return {
+    type: 'multiple_choice',
+    question: questionText,
+    options,
+    correct_answer: correctAnswer,
+    word_id: word.id,
+    grammar_point: grammarField,
+    explanation
+  };
+}
+
+/**
+ * Generate reverse translation question: "Which word means [english]?"
+ */
+function generateReverseTranslationQuestion(word: any, allWords: any[]): QuizQuestion {
+  const wrongOptions = shuffleArray(allWords)
+    .filter(w => w.id !== word.id && w.text_arabic)
+    .slice(0, 3)
+    .map(w => w.text_arabic);
+
+  const options = shuffleArray([word.text_arabic, ...wrongOptions]);
+
+  return {
+    type: 'multiple_choice',
+    question: `Which word means '${word.translation_english}'?`,
+    options,
+    correct_answer: word.text_arabic,
+    word_id: word.id,
+    grammar_point: null,
+    explanation: `'${word.text_arabic}' means '${word.translation_english}'.`
+  };
+}
+
+/**
+ * Generates a quiz for a given surah using ONLY database data (no LLM/API calls)
+ * Generates 10 questions: 4 vocabulary, 4 grammar, 2 reverse translation
+ */
+export async function generateQuizFromDatabase(
+  supabase: SupabaseClient,
   surahId: number
 ): Promise<QuizGenerationResult> {
   try {
-    if (!process.env.ANTHROPIC_API_KEY) {
-      return {
-        success: false,
-        error: 'ANTHROPIC_API_KEY is not configured'
-      };
-    }
-    // Fallback check (commented out - uncomment if switching back to Groq)
-    // if (!process.env.GROQ_API_KEY) {
-    //   return {
-    //     success: false,
-    //     error: 'GROQ_API_KEY is not configured'
-    //   };
-    // }
-
-    // Fetch surah data with all words
-    const { data: surahData, error: surahError } = await supabase
+    // Fetch surah info
+    const { data: surah, error: surahError } = await supabase
       .from('surahs')
-      .select(`
-        id,
-        surah_number,
-        name_english,
-        name_arabic,
-        verses (
-          id,
-          verse_number,
-          text_arabic,
-          words (
-            id,
-            word_position,
-            text_arabic,
-            transliteration,
-            translation_english,
-            grammar_info
-          )
-        )
-      `)
+      .select('id, surah_number, name_english, name_arabic')
       .eq('id', surahId)
       .single();
 
-    if (surahError) throw surahError;
-    if (!surahData) throw new Error('Surah not found');
-
-    // Prepare data for LLM with explicit word IDs
-    const wordsData = surahData.verses?.flatMap((v: any) => v.words || []) || [];
-
-    // Build verse context with translations for grammar questions
-    const verseContexts = surahData.verses?.map((v: any) => {
-      const verseWords = v.words || [];
-      const verseTranslation = verseWords
-        .sort((a: any, b: any) => a.word_position - b.word_position)
-        .map((w: any) => w.translation_english || '')
-        .filter((t: string) => t)
-        .join(' ');
+    if (surahError || !surah) {
       return {
-        verse_number: v.verse_number,
-        text_arabic: v.text_arabic,
-        translation: verseTranslation,
-        words: verseWords.sort((a: any, b: any) => a.word_position - b.word_position)
+        success: false,
+        error: 'Surah not found'
       };
-    }) || [];
+    }
 
-    // Create phrase contexts only for words with grammar info (likely to be used in grammar questions)
-    // This reduces prompt size significantly
-    const wordsWithGrammar = wordsData.filter((w: any) => w.grammar_info && (
-      w.grammar_info.part_of_speech === 'noun' ||
-      w.grammar_info.part_of_speech === 'adjective' ||
-      w.grammar_info.part_of_speech === 'verb' ||
-      w.grammar_info.case
-    ));
-
-    // Create phrase contexts for each word with proper translations and grammatical relationships
-    const wordContexts = wordsWithGrammar.map((word: any) => {
-      // Find the verse this word belongs to
-      const verse = verseContexts.find((v: any) =>
-        v.words.some((w: any) => w.id === word.id)
-      );
-
-      if (!verse) return null;
-
-      // Get full verse context for grammatical analysis
-      const wordIndex = verse.words.findIndex((w: any) => w.id === word.id);
-
-      // Get 2-3 words of context around this word for phrase display
-      const startIndex = Math.max(0, wordIndex - 1);
-      const endIndex = Math.min(verse.words.length, wordIndex + 3);
-      const contextWords = verse.words.slice(startIndex, endIndex);
-
-      const phraseArabic = contextWords.map((w: any) => w.text_arabic).join(' ');
-      const phraseTranslation = contextWords.map((w: any) => w.translation_english || '').filter((t: string) => t).join(' ');
-
-      // Build verse structure with all words and their grammar info for context
-      const verseStructure = verse.words.map((w: any, idx: number) => ({
-        position: idx + 1,
-        arabic: w.text_arabic,
-        translation: w.translation_english || '',
-        grammar: w.grammar_info || {}
-      }));
-
-      return {
-        word_id: word.id,
-        target_word: word.text_arabic,
-        target_translation: word.translation_english,
-        phrase_arabic: phraseArabic,
-        phrase_translation: phraseTranslation,
-        grammar: word.grammar_info,
-        full_verse_arabic: verse.text_arabic,
-        full_verse_translation: verse.translation,
-        verse_number: verse.verse_number,
-        verse_structure: verseStructure // Full verse with all words and their grammar
-      };
-    }).filter(Boolean);
-
-    const prompt = `You are generating a 10-question quiz for Surah ${surahData.name_english} (${surahData.name_arabic}) to test Quranic Arabic comprehension.
-
-**Critical**: 
-- Return ONLY a valid JSON array. No markdown, no code blocks, no backticks, no explanations. Your response must start with [ and end with ].
-- **NO TRANSLITERATION** in question text - show only Arabic script and English translations
-
----
-
-Available Data:
-
-Words with Individual Translations (compact format):
-${wordsData.map((w: any) => {
-      const g = w.grammar_info || {};
-      const grammarStr = [g.part_of_speech, g.case, g.gender, g.number].filter(Boolean).join(',');
-      return `- word_id: ${w.id}, ${w.text_arabic} = "${w.translation_english || 'N/A'}" [${grammarStr || 'N/A'}]`;
-    }).join('\n')}
-
-Phrase Contexts (for Grammar Questions - USE THESE EXACT TRANSLATIONS):
-${wordContexts.map((ctx: any) => {
-      // Compact grammar representation - only key fields
-      const grammarStr = ctx.grammar ? [
-        ctx.grammar.part_of_speech,
-        ctx.grammar.case,
-        ctx.grammar.gender,
-        ctx.grammar.number
-      ].filter(Boolean).join(',') : 'N/A';
-
-      let contextInfo = `- word_id: ${ctx.word_id}, target: ${ctx.target_word}, phrase: "${ctx.phrase_arabic}" = "${ctx.phrase_translation}"`;
-      contextInfo += `\n  Grammar: ${grammarStr}`;
-      contextInfo += `\n  Verse ${ctx.verse_number}: "${ctx.full_verse_arabic}"`;
-
-      // Only include nearby words (2 before, 2 after) with compact grammar for context
-      const wordIndex = ctx.verse_structure.findIndex((w: any) => w.arabic === ctx.target_word);
-      const startIdx = Math.max(0, wordIndex - 2);
-      const endIdx = Math.min(ctx.verse_structure.length, wordIndex + 3);
-      const nearbyWords = ctx.verse_structure.slice(startIdx, endIdx);
-
-      if (nearbyWords.length > 0) {
-        contextInfo += `\n  Context: ${nearbyWords.map((w: any) => {
-          const g = w.grammar || {};
-          const gStr = [g.part_of_speech, g.case].filter(Boolean).join('/');
-          return `${w.arabic}(${gStr || 'N/A'})`;
-        }).join(' ')}`;
-      }
-
-      return contextInfo;
-    }).join('\n')}
-
-${surahData.surah_number === 1 ? `**SPECIAL NOTE FOR AL-FATIHA:**
-- In verse 1, ٱلرَّحْمَـٰنِ and ٱلرَّحِيمِ are both adjectives describing ٱللَّهِ
-- They are coordinate adjectives (not modifying each other)
-- They take genitive case to match ٱللَّهِ which is genitive after بِسْمِ
-- When explaining the case of ٱلرَّحْمَـٰنِ or ٱلرَّحِيمِ, state: "This word is genitive because it is an adjective agreeing with ٱللَّهِ, which is genitive as the second term (mudaf ilayhi) in the possessive construction 'بِسْمِ ٱللَّهِ'"
-` : ''}
-
-Complete Verses (for Comprehension Questions):
-${verseContexts.map((v: any) => `- V${v.verse_number}: ${v.text_arabic}`).join('\n') || ''}
-
----
-
-Question Distribution (EXACTLY 10 questions):
-
-1. 4 Word Meaning Questions - Test Arabic word → English meaning
-2. 3 Grammar Questions - Test grammatical properties
-3. 2 Comprehension Questions - Test understanding of specific verses
-4. 1 Phrase Translation Question - Test translation of 2-3 word phrases
-
----
-
-WORD MEANING QUESTIONS:
-
-Format: "What does the word 'ٱلرَّحْمَـٰنِ' mean?"
-
-Rules:
-- Show only Arabic word in quotes - NO transliteration
-- Never mention word_id in question text
-- Include word_id as number in JSON only
-- Provide 4 clear options
-
-Example:
-{
-  "type": "multiple_choice",
-  "question": "What does the word 'ٱلرَّحْمَـٰنِ' mean?",
-  "options": ["The Most Merciful", "The King", "The Guide", "The Creator"],
-  "correct_answer": "The Most Merciful",
-  "word_id": 123,
-  "grammar_point": null,
-  "explanation": "ٱلرَّحْمَـٰنِ (ar-raḥmāni) means 'The Most Merciful', one of Allah's names."
-}
-
----
-
-GRAMMAR QUESTIONS:
-
-**CRITICAL**: Use ONLY the pre-built phrase contexts provided above. Do NOT construct your own translations.
-
-Format: "In the phrase '[Arabic phrase]' ([English translation from phrase context]), what is [target word]?"
-
-Rules:
-- Find the word in "Phrase Contexts" section above
-- Use the EXACT phrase_arabic and phrase_translation provided
-- ALWAYS include English translation in parentheses after Arabic phrase
-- NO transliteration - only Arabic script and English
-- Use plain language in options
-- Ask simple, direct questions
-- **For case questions**: Use the full verse context and grammatical relationships provided to generate accurate explanations
-
-Question Patterns:
-- For Number: "what is [word]?" → Options: "Singular", "Dual", "Plural"
-- For Case: "what case is [word] in?" → Options: "Nominative", "Genitive", "Accusative"
-- For Role: "what is [word]?" → Options: "The subject", "The object", "A possessive construction"
-  **CRITICAL**: Say "The subject", "The object" - NOT "Subject form", "Object form"
-
-**EXPLANATION REQUIREMENTS FOR GRAMMAR QUESTIONS:**
-
-When explaining grammatical case, you MUST:
-1. Identify WHAT the word is agreeing with or relating to
-2. State the grammatical relationship clearly
-3. Use the full verse context provided in "Phrase Contexts"
-4. Reference the grammatical relationships if provided
-
-**For Case Explanations:**
-- If idafa: "This word is genitive because it is the mudaf ilayhi (second term) in the possessive construction '[mudaf] [mudaf ilayhi]' meaning '[translation]'"
-- If preposition: "This word is genitive because it follows the preposition '[preposition]'"
-- If adjective: "This word is [case] because it is an adjective agreeing with [noun] in [case] case. [Noun] is [case] because [reason]"
-- Always identify what the word relates to grammatically, not just state the case
-
-**For Al-Fatiha specifically:**
-- When explaining ٱلرَّحْمَـٰنِ or ٱلرَّحِيمِ: "This word is genitive because it is an adjective agreeing with ٱللَّهِ, which is genitive as the second term (mudaf ilayhi) in the possessive construction 'بِسْمِ ٱللَّهِ'"
-- They are coordinate adjectives (both describe ٱللَّهِ, not each other)
-
-Example:
-{
-  "type": "multiple_choice",
-  "question": "In the phrase 'بِسۡمِ ٱللَّهِ ٱلرَّحۡمَـٰنِ' (In the name of Allah, the Most Gracious), what case is ٱلرَّحۡمَـٰنِ in?",
-  "options": ["Nominative", "Genitive", "Accusative", "No case"],
-  "correct_answer": "Genitive",
-  "word_id": 456,
-  "grammar_point": "case",
-  "explanation": "ٱلرَّحۡمَـٰنِ is genitive because it is an adjective agreeing with ٱللَّهِ, which is genitive as the second term (mudaf ilayhi) in the possessive construction 'بِسْمِ ٱللَّهِ' (in the name of Allah)."
-}
-
----
-
-COMPREHENSION QUESTIONS:
-
-**CRITICAL NEW RULE**: When asking about a specific verse, ALWAYS include the Arabic text of that verse in the question so the user can see it.
-
-Format: "Verse [number] says: '[Arabic text of verse]'. What [question about meaning/message]?"
-
-**CRITICAL RESTRICTIONS - NEVER ASK:**
-- NEVER ask questions about the surah's name, number, or classification
-- NEVER use verse 1 (Bismillah) for comprehension questions as it's generic across surahs
-- NEVER ask "What is the name of this surah?"
-- NEVER ask "What does the Bismillah tell us about this surah?"
-- NEVER ask "Which surah is this verse from?"
-- Focus on substantive content that teaches understanding of the Quranic message
-
-**WHAT TO ASK INSTEAD:**
-Comprehension questions should ONLY ask about:
-1. The meaning or message of a specific verse
-2. What action is commanded/forbidden in a verse
-3. What characteristic or attribute is described
-4. What consequence or result is mentioned
-
-CRITICAL RULE - Single Verse Precision:
-- The correct answer MUST come ONLY from the specific verse mentioned
-- Do NOT use information from adjacent verses for the correct answer
-- You MAY use adjacent verses' messages as wrong options (distractors)
-- ALWAYS display the Arabic verse text in the question
-- Skip verse 1 (Bismillah) - start from verse 2 or later
-
-Process:
-1. Analyze what THIS verse says (not the next/previous verse)
-2. Skip verse 1 (Bismillah) - it's generic and not surah-specific
-3. Include the full Arabic text of the verse in the question
-4. Generate question about the verse's meaning, message, command, characteristic, or consequence
-5. Create distractors from adjacent verses or related themes
-
-**BAD Examples (DO NOT USE):**
-- "What is the name of this surah?" ❌
-- "What does the Bismillah tell us about this surah?" ❌
-- "Which surah is this verse from?" ❌
-- "Verse 1 says: 'بِسۡمِ ٱللَّهِ ٱلرَّحۡمَـٰنِ ٱلرَّحِيمِ'. What is this phrase called?" ❌
-
-**GOOD Example:**
-{
-  "type": "multiple_choice",
-  "question": "Verse 16 says: 'بَلۡ تُؤۡثِرُونَ ٱلۡحَيَوٰةَ ٱلدُّنۡيَا'. What human tendency is criticized in this verse?",
-  "options": ["Neglecting prayer", "Prioritizing worldly pleasures over spiritual matters", "Believing the Hereafter is better", "Following misguided leaders"],
-  "correct_answer": "Prioritizing worldly pleasures over spiritual matters",
-  "word_id": null,
-  "grammar_point": null,
-  "explanation": "Verse 16 specifically criticizes the human tendency to prefer worldly life (al-hayāt ad-dunyā). The next verse states the Hereafter is better, but verse 16 itself identifies this problematic preference."
-}
-
----
-
-PHRASE TRANSLATION QUESTION:
-
-Format: "What does the phrase 'بِسۡمِ ٱللَّهِ' mean?"
-
-Rules:
-- Show only Arabic text - NO transliteration
-- 2-3 word meaningful phrase
-- 4 translation options
-
-Example:
-{
-  "type": "multiple_choice",
-  "question": "What does the phrase 'بِسۡمِ ٱللَّهِ' mean?",
-  "options": ["In the name of Allah", "By the grace of Allah", "For the sake of Allah", "With the help of Allah"],
-  "correct_answer": "In the name of Allah",
-  "word_id": null,
-  "grammar_point": null,
-  "explanation": "بِسۡمِ ٱللَّهِ (bismi llāhi) means 'In the name of Allah'."
-}
-
----
-
-CRITICAL INSTRUCTIONS:
-1. Return ONLY valid JSON - no markdown, backticks, or extra text
-2. Start with [ and end with ]
-3. Exactly 10 questions
-4. NO transliteration in question text
-5. For Grammar questions: Use EXACT phrase translations from "Phrase Contexts" section
-6. For Comprehension questions: ALWAYS include the Arabic verse text in the question
-7. Grammar questions MUST have English translation in parentheses
-8. Use plain language: "The subject" not "Subject form"
-9. word_id must be number or null, never string
-10. One option must exactly match correct_answer
-11. NEVER ask about surah name, number, or classification in comprehension questions
-12. NEVER use verse 1 (Bismillah) for comprehension questions - start from verse 2 or later
-
-Remember: Return ONLY the JSON array. No other text.`;
-
-    // Call Mistral AI API
-
-    // Call Claude API
-
-    console.log('=== CLAUDE API CALL ===');
-    console.log('Prompt length:', prompt.length);
-    console.log('========================');
-
-    // Generate quiz questions (retry logic is handled inside generateJSONWithClaude)
-    const result = await generateJSONWithClaude(prompt, {
-      temperature: 0.3, // Lower temperature for more consistent JSON
-      maxTokens: 4000
+    // Get all words with translations for wrong options
+    const allWordsWithTranslation = await getRandomWords(supabase, surahId, 50, {
+      hasTranslation: true
     });
 
-    // Fallback option (commented out - uncomment if switching back to Groq)
-    // const result = await generateJSONWithGroq(prompt, {
-    //   temperature: 0.3,
-    //   maxTokens: 4000
-    // });
-
-    // Validate response
-    if (!Array.isArray(result)) {
-      throw new Error(`Invalid response: expected array, got ${typeof result}`);
+    if (allWordsWithTranslation.length < 10) {
+      return {
+        success: false,
+        error: 'Not enough words with translations in this surah'
+      };
     }
 
-    if (result.length === 0) {
-      throw new Error('Empty questions array received');
+    const questions: QuizQuestion[] = [];
+
+    // 4 Vocabulary questions
+    const vocabWords = await getRandomWords(supabase, surahId, 4, {
+      hasTranslation: true
+    });
+    for (const word of vocabWords) {
+      const question = generateVocabularyQuestion(word, allWordsWithTranslation);
+      questions.push(question);
     }
 
-    const questions = result;
+    // 4 Grammar questions
+    const grammarFields: Array<'part_of_speech' | 'case' | 'number' | 'form'> = ['part_of_speech', 'case', 'number', 'form'];
+    let grammarQuestionsGenerated = 0;
 
-    if (questions.length < 10) {
-      console.warn(`Only ${questions.length} questions generated, expected 10`);
-    }
+    for (const field of grammarFields) {
+      if (grammarQuestionsGenerated >= 4) break;
 
-    // Validate and normalize questions
-    const validatedQuestions = questions.map((q: any) => {
-      // Validate and convert word_id to number or null
-      let wordId: number | null = null;
-      if (q.word_id) {
-        const parsedId = typeof q.word_id === 'string' ? parseInt(q.word_id, 10) : q.word_id;
-        if (!isNaN(parsedId) && parsedId > 0) {
-          wordId = parsedId;
+      const grammarWords = await getRandomWords(supabase, surahId, 10, {
+        hasGrammarField: field
+      });
+
+      for (const word of grammarWords) {
+        if (grammarQuestionsGenerated >= 4) break;
+        const question = generateGrammarQuestion(word, field, allWordsWithTranslation);
+        if (question) {
+          questions.push(question);
+          grammarQuestionsGenerated++;
         }
       }
+    }
 
-      return {
-        type: q.type || 'multiple_choice',
-        question: q.question || '',
-        options: Array.isArray(q.options) ? q.options : [],
-        correct_answer: q.correct_answer || '',
-        word_id: wordId,
-        grammar_point: q.grammar_point || null,
-        explanation: q.explanation || ''
-      };
+    // If we didn't get 4 grammar questions, fill with more vocabulary
+    while (grammarQuestionsGenerated < 4 && questions.length < 8) {
+      const extraVocabWords = await getRandomWords(supabase, surahId, 1, {
+        hasTranslation: true
+      });
+      if (extraVocabWords.length > 0) {
+        const question = generateVocabularyQuestion(extraVocabWords[0], allWordsWithTranslation);
+        // Check if we already have this word
+        if (!questions.some(q => q.word_id === question.word_id)) {
+          questions.push(question);
+          grammarQuestionsGenerated++;
+        }
+      } else {
+        break;
+      }
+    }
+
+    // 2 Reverse translation questions
+    const reverseWords = await getRandomWords(supabase, surahId, 2, {
+      hasTranslation: true
     });
+    for (const word of reverseWords) {
+      // Make sure we haven't used this word already
+      if (!questions.some(q => q.word_id === word.id)) {
+        const question = generateReverseTranslationQuestion(word, allWordsWithTranslation);
+        questions.push(question);
+      }
+    }
+
+    // Shuffle all questions
+    const shuffledQuestions = shuffleArray(questions).slice(0, 10);
+
+    // Ensure we have exactly 10 questions
+    if (shuffledQuestions.length < 10) {
+      return {
+        success: false,
+        error: `Could only generate ${shuffledQuestions.length} questions. Need at least 10 words with translations.`
+      };
+    }
 
     return {
       success: true,
-      questions: validatedQuestions
+      questions: shuffledQuestions
     };
 
   } catch (error: any) {
-    console.error('Error generating quiz:', error);
+    console.error('Error generating quiz from database:', error);
     return {
       success: false,
-      error: error.message || error.toString()
+      error: error.message || 'Failed to generate quiz'
     };
   }
 }

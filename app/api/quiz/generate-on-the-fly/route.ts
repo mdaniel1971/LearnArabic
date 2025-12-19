@@ -1,22 +1,10 @@
 import { createClient } from '@/utils/supabase/server';
 import { NextRequest, NextResponse } from 'next/server';
-import { generateQuizForSurahOnTheFly } from '@/utils/quiz-generation-on-the-fly';
+import { generateQuizFromDatabase } from '@/utils/quiz-generation-on-the-fly';
 
 export async function POST(request: NextRequest) {
   try {
     const { surahId } = await request.json();
-
-    if (!process.env.ANTHROPIC_API_KEY) {
-      return NextResponse.json({
-        error: 'ANTHROPIC_API_KEY is not configured. Please add it to your .env.local file.'
-      }, { status: 500 });
-    }
-    // Fallback check (commented out - uncomment if switching back to Groq)
-    // if (!process.env.GROQ_API_KEY) {
-    //   return NextResponse.json({
-    //     error: 'GROQ_API_KEY is not configured. Please add it to your .env.local file.'
-    //   }, { status: 500 });
-    // }
 
     const supabase = await createClient();
 
@@ -28,8 +16,8 @@ export async function POST(request: NextRequest) {
       }, { status: 401 });
     }
 
-    // Generate quiz on-the-fly (returns questions directly, doesn't store them)
-    const result = await generateQuizForSurahOnTheFly(supabase, surahId);
+    // Generate quiz from database (no API calls needed)
+    const result = await generateQuizFromDatabase(supabase, surahId);
 
     if (!result.success) {
       return NextResponse.json({
